@@ -353,7 +353,9 @@
     inspectorView.appendChild(details);
     panel.appendChild(inspectorView);
 
-    var settingsView = make("div", "settings-placeholder", "Settings (stage 9)");
+    var settingsView = make("div", "inspector-settings-view");
+    settingsView.id = "settings-pane";
+    if (!window.__panel) settingsView.textContent = "Settings (stage 9)";
     settingsView.style.display = "none";
     panel.appendChild(settingsView);
 
@@ -401,6 +403,7 @@
     });
     settingsTab.addEventListener("click", function () {
       setTab("settings");
+      if (window.__panel && window.__panel.show) window.__panel.show();
     });
     curlBtn.addEventListener("click", onCurl);
     openBtn.addEventListener("click", onOpen);
@@ -412,6 +415,7 @@
     });
     loadFullBtn.addEventListener("click", onLoadFull);
     render();
+    if (window.__panel && window.__panel.mount) window.__panel.mount();
   }
 
   function appendMeta(container, label) {

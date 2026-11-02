@@ -632,15 +632,20 @@
       buildInto(root);
     }
 
-    var placeholder = host.querySelector(".settings-placeholder");
-    var target = placeholder || host;
+    var pane = host.querySelector("#settings-pane");
+    var placeholder = pane ? null : host.querySelector(".settings-placeholder");
+    var target = pane || placeholder || host;
     if (root.parentNode !== target) {
-      if (placeholder) {
-        while (placeholder.firstChild) placeholder.removeChild(placeholder.firstChild);
+      if (pane || placeholder) {
+        while (target.firstChild) target.removeChild(target.firstChild);
       }
       target.appendChild(root);
     }
     return root;
+  }
+
+  function mount() {
+    return ensureRoot();
   }
 
   // -------------------------------------------------------------------------
@@ -734,6 +739,7 @@
   window.__panel = {
     show: show,
     hide: hide,
+    mount: mount,
     state: stateSnapshot
   };
 

@@ -1,0 +1,41 @@
+{
+  "stage": "install",
+  "shell": "sh",
+  "node_check": true,
+  "npm_install": true,
+  "self_test": true,
+  "smoke": true,
+  "clone_run": "pass",
+  "git": {
+    "committed": true,
+    "files": 146,
+    "ignored_ok": true
+  },
+  "raw": [
+    {
+      "run": "git clone",
+      "output": "Клонирование в «/home/erema/recon-clone-test/recon-graph»...\nготово.\n"
+    },
+    {
+      "run": "sh install.sh --check",
+      "output": "Node.js: v22.23.3 | npm: 12.2.0\nProject: /home/erema/recon-clone-test/recon-graph\nCheck OK: environment and required files present.\nNo network install was performed. Run 'sh install.sh' to install dependencies and run self-tests.\nCHECK_EXIT=0\n"
+    },
+    {
+      "run": "sh install.sh",
+      "output": "Node.js: v22.23.3 | npm: 12.2.0\nProject: /home/erema/recon-clone-test/recon-graph\nInstalling dependencies (ws)...\n\nadded 1 package in 396ms\nsqlite3: found (3.53.4) - optional, not required\nbrowser: found - UI will work at http://127.0.0.1:8931/\nRunning database self-test...\nPASS tmpdir: /tmp/recon-db-WiyZiH/scan.sqlite\nPASS schema: scans,nodes,edges,bodies,fts_docs,findings,queue,node_fts\nPASS scan: id=1 status=running\nPASS nodes=3: A=1 B=2 C=3\nPASS edges=2: count=2 duplicate=ignored\nPASS degree: degree A=1 B=2 C=1 (shared node B = 2)\nPASS fts: hits=1 snippet=\"<html>[delta]-flag-marker ALPHA</html>\"\nPASS upsert-idempotent: id=1 rev 14->15\nPASS rev: maxNodeRev=15 maxEdgeRev=9\nPASS delta: nodes=3 edges=2 cursor=15 then 0/0\nPASS edge-delete-degree: degree A=0 B=1\nPASS fts-excludes-oversized: no body tokens indexed, fts_truncated=1, fts body NULL\nPASS fts-url-still-searchable: hit node=4 via url/title, snippet=\"\"\nPASS delta-edge-after-cursor: cursor=18 edgeRev=21 edges=1 nodes=2(degree)\nPASS partial-upsert-preserves: id=5 fields preserved rev=22\nPASS attrs-key-order-noop: rev=23 attrs_json={\"a\":1,\"b\":2}\nPASS node-delete-clears-fts: search=0 fts_docs=0 after node delete\nPASS stats-queue-states: pending=1 inflight=1 done=1 err=1\nPASS open-readonly: read ok, write blocked, missing throws\nPASS cleanup: closed + tmpdir removed\nSUMMARY pass=20 fail=0\nRunning stage 0 smoke test...\nPASS vendored-files-exist\nPASS vendored-sha256-matches-VENDOR.md\nPASS server-start\nPASS http-index-assets\nPASS vendor-sim-content-type\nPASS traversal-blocked\nPASS 404\nSUMMARY pass=7 fail=0 total=7\n\nInstall complete.\n\nNext steps:\n  node bin/scanner.js https://example.com/ --max-depth 3 --wordlist lists/common.txt\n  node bin/server.js\n  # open http://127.0.0.1:8931/\nINSTALL_EXIT=0\n"
+    },
+    {
+      "run": "sh install.sh (second run, idempotency)",
+      "output": "Node.js: v22.23.3 | npm: 12.2.0\nProject: /home/erema/recon-clone-test/recon-graph\nInstalling dependencies (ws)...\n\nup to date in 378ms\nsqlite3: found (3.53.4) - optional, not required\nbrowser: found - UI will work at http://127.0.0.1:8931/\nRunning database self-test...\nPASS tmpdir: /tmp/recon-db-Cfb8wf/scan.sqlite\nPASS schema: scans,nodes,edges,bodies,fts_docs,findings,queue,node_fts\nPASS scan: id=1 status=running\nPASS nodes=3: A=1 B=2 C=3\nPASS edges=2: count=2 duplicate=ignored\nPASS degree: degree A=1 B=2 C=1 (shared node B = 2)\nPASS fts: hits=1 snippet=\"<html>[delta]-flag-marker ALPHA</html>\"\nPASS upsert-idempotent: id=1 rev 14->15\nPASS rev: maxNodeRev=15 maxEdgeRev=9\nPASS delta: nodes=3 edges=2 cursor=15 then 0/0\nPASS edge-delete-degree: degree A=0 B=1\nPASS fts-excludes-oversized: no body tokens indexed, fts_truncated=1, fts body NULL\nPASS fts-url-still-searchable: hit node=4 via url/title, snippet=\"\"\nPASS delta-edge-after-cursor: cursor=18 edgeRev=21 edges=1 nodes=2(degree)\nPASS partial-upsert-preserves: id=5 fields preserved rev=22\nPASS attrs-key-order-noop: rev=23 attrs_json={\"a\":1,\"b\":2}\nPASS node-delete-clears-fts: search=0 fts_docs=0 after node delete\nPASS stats-queue-states: pending=1 inflight=1 done=1 err=1\nPASS open-readonly: read ok, write blocked, missing throws\nPASS cleanup: closed + tmpdir removed\nSUMMARY pass=20 fail=0\nRunning stage 0 smoke test...\nPASS vendored-files-exist\nPASS vendored-sha256-matches-VENDOR.md\nPASS server-start\nPASS http-index-assets\nPASS vendor-sim-content-type\nPASS traversal-blocked\nPASS 404\nSUMMARY pass=7 fail=0 total=7\n\nInstall complete.\n\nNext steps:\n  node bin/scanner.js https://example.com/ --max-depth 3 --wordlist lists/common.txt\n  node bin/server.js\n  # open http://127.0.0.1:8931/\nINSTALL2_EXIT=0\n"
+    },
+    {
+      "run": "node bin/scanner.js --help | head -3",
+      "output": "Usage: node bin/scanner.js <target-url> [options]\n\nCrawl a target and record the live recon graph.\nHELP_EXIT=0\n"
+    },
+    {
+      "run": "sh uninstall.sh --yes",
+      "output": "Removed: node_modules/\nNot present: data/\nLeft in place: /home/erema/.local/node (not created by install.sh)\nDone.\nUNINSTALL_EXIT=0\n"
+    }
+  ],
+  "failures": []
+}

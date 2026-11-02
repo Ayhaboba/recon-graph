@@ -1,0 +1,54 @@
+{
+  "stage": 4,
+  "verdict": "PASS",
+  "score": 84,
+  "checks": [
+    {
+      "id": "1-status-sets",
+      "result": "pass",
+      "evidence": "lib/fuzz.js:22-23 HIT={200,204,301,302,307,401,403}, MISS={404,410}; lib/fuzz.js:449-451 miss->return, non-hit->return; verified by node --test tests/fuzz.test.js (6/6 pass)."
+    },
+    {
+      "id": "2-soft-404",
+      "result": "pass",
+      "evidence": "lib/fuzz.js:243-282 random 12-byte probe path, 270; lib/fuzz.js:337-355 sha256 equality OR |size-ref|/ref<=5%; probe gated on reference status in HIT set (338); tests/fuzz.test.js:199-240 soft page not stored. One-byte-different 200 stays soft via size tolerance; different-size real hit survives."
+    },
+    {
+      "id": "3-node-edge-writes",
+      "result": "pass",
+      "evidence": "lib/fuzz.js:457-482 key(url) normalized, upsertNode origin='fuzz', addEdge(parent,'fuzzed'); lib/db.js:296-375 upsert dedupes by (scan_id,key), 525-539 INSERT OR IGNORE edge; tests/fuzz.test.js:166-193 exact 3 fuzz rows + fuzzed edge, 394-407 no duplicate keys on resume."
+    },
+    {
+      "id": "4-politeness-limits",
+      "result": "pass",
+      "evidence": "lib/fuzz.js:373-383 clamps; 488-507 worker pool honours concurrency; 494-497 global delay spacing; 402-403 maxPaths guard; 443-446 per-URL try/catch (connection refused -> errors++, no throw); 187-203 1 MiB body cap."
+    },
+    {
+      "id": "5-resume-options",
+      "result": "pass",
+      "evidence": "bin/scanner.js:367-386 stores maxDepth/concurrency/perHost/delay/timeout/scope/ignoreRobots/headers/wordlist/maxBodyBytes/maxRedirects; 416-470 mergeResumeOptions uses explicit[] so CLI wins; 716-725 resume path; tests/fuzz.test.js:369-378 asserts depth=2 and stored wordlist reused."
+    },
+    {
+      "id": "6-test-integrity",
+      "result": "pass",
+      "evidence": "tests/fuzz.test.js:166-193 asserts exactly 3 rows, key suffixes, allowed status set, fuzzed edge; 199-240 adversarial absent-word soft-404 case; 242-325 e2e fails if fuzzer writes nothing (fuzzCount>=1, nonexistent absent); 327-410 resume dedupe. Full file: 6/6 pass in probe run."
+    }
+  ],
+  "issues": {
+    "critical": [],
+    "high": [],
+    "medium": [
+      "Fuzzer ignores perHost (lib/fuzz.js:373 only concurrency; bin/scanner.js:565-577 never passes perHost): default 8 in-flight to one host vs spec §8 per-host 4.",
+      "maxPaths guard aborts whole run silently (lib/fuzz.js:402-403): default 5000 with scanner cap 200 dirs x 48 words can silently disable stage 4 with tested=0 on real scans; no log/warning.",
+      "fuzzed edge skipped when directory node absent (lib/fuzz.js:463-482): dirs come from directoryOf() of crawled nodes (bin/scanner.js:473-514), so deeper dirs are often not nodes -> fuzz hits become disconnected, weakening stage-8 graph adjacency (search/filters by origin still work)."
+    ],
+    "low": [
+      "Soft-404 probe always hits origin root, not target base path (lib/fuzz.js:270-273), so per-directory soft pages under a path prefix are not referenced.",
+      "response.size is truncated body length, not Content-Length (lib/fuzz.js:205-215), so soft-404 size compare is on capped bytes for >1 MiB pages.",
+      "Resume cannot explicitly turn stored ignoreRobots off; --ignore-robots only sets true (bin/scanner.js:449-451).",
+      "Soft-404 test uses fixed word 'nonexistent', not a random word (tests/fuzz.test.js:221); e2e admin/api assertions are not origin-scoped (294-306), so they could pass via crawl nodes.",
+      "Fuzz hits never call putBody, so no bodies/fts_docs row exists: stage-8 content search cannot match fuzz-discovered pages by body text (lib/fuzz.js:469-478)."
+    ]
+  },
+  "criterion_met": true
+}

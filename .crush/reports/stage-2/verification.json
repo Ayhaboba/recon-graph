@@ -1,0 +1,208 @@
+{
+  "stage": 2,
+  "timestamp": "2026-11-01T23:19:30.022Z",
+  "syntax_ok": true,
+  "npm_test": {
+    "exit": 0,
+    "tests": 72,
+    "pass": 72,
+    "fail": 0,
+    "raw": "1..72\n# tests 72\n# suites 0\n# pass 72\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 137.140382"
+  },
+  "node_test": {
+    "exit": 0,
+    "tests": 72,
+    "pass": 72,
+    "fail": 0,
+    "raw": "1..72\n# tests 72\n# suites 0\n# pass 72\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 145.634446"
+  },
+  "criterion": {
+    "key_pair_equal": true,
+    "key_pair": [
+      "GET https://host/a?a=1&b=2",
+      "GET https://host/a?a=1&b=2",
+      "GET https://host/a?a=1&b=2"
+    ],
+    "html_fixtures": 5,
+    "js_fixtures": 3,
+    "basic_links": 13,
+    "nested_links": 6,
+    "attrs_links": 5,
+    "css_links": 4,
+    "flag_links": 1,
+    "endpoints_links": 6,
+    "bundle_links": 1
+  },
+  "final_fixes": {
+    "base_unquoted_slash": true,
+    "js_postfix_division": true,
+    "js_statement_regex": true,
+    "json_quoted_keys": true,
+    "js_regex_literal_no_leak": true
+  },
+  "rules": {
+    "json_keys": true,
+    "negatives_clean": true,
+    "secrets": [
+      "aws-key",
+      "ctf",
+      "flag",
+      "secret-assign",
+      "secret-assign",
+      "secret-assign",
+      "todo"
+    ],
+    "bundle": [
+      "private-key",
+      "stacktrace",
+      "stacktrace",
+      "stacktrace",
+      "todo"
+    ],
+    "flag": [
+      "aws-key",
+      "ctf",
+      "flag",
+      "private-key",
+      "secret-assign",
+      "stacktrace",
+      "todo"
+    ]
+  },
+  "pathological": {
+    "extract_2mb_ms": 345.730259,
+    "scan_4mb_ms": 15.555095,
+    "extract_2mb_bytes": 2097160,
+    "scan_4mb_bytes": 4194325,
+    "limit_ms": 3000,
+    "all_under_limit": true
+  },
+  "probes": {
+    "base_split": {
+      "base": "http://site.test/sub/",
+      "urls": [
+        "http://site.test/sub/after"
+      ]
+    },
+    "base_split_rootref": {
+      "base": "http://site.test/sub/",
+      "urls": [
+        "http://site.test/x"
+      ]
+    },
+    "base_split_rootref_ok": true,
+    "js_postfix_inc": [
+      "http://site.test/api/v1/real"
+    ],
+    "js_postfix_dec": [
+      "http://site.test/api/v1/real"
+    ],
+    "js_statement_regex": [
+      "http://site.test/api/v1/real"
+    ],
+    "js_regex_assign": [
+      "http://site.test/api/v1/real"
+    ],
+    "srcset": [
+      "https://cdn.test/a,b.png",
+      "http://cdn.test/c",
+      "http://site.test/ok.png"
+    ],
+    "srcset_ok": true,
+    "base_first_wins": [
+      "http://site.test/sub/before",
+      "http://site.test/sub/after"
+    ],
+    "base_first_wins_ok": true,
+    "endpoints_has_v3": true,
+    "endpoints_exact_6": true,
+    "rules_positives": [
+      {
+        "text": "{\"token\": \"abcdef\"}",
+        "secret_assign": 1
+      },
+      {
+        "text": "{\"password\": \"hunter2\"}",
+        "secret_assign": 1
+      },
+      {
+        "text": "{\"api_key\": \"abcd\"}",
+        "secret_assign": 1
+      },
+      {
+        "text": "token: \"abcdef\"",
+        "secret_assign": 1
+      },
+      {
+        "text": "password=hunter2",
+        "secret_assign": 1
+      },
+      {
+        "text": "DB_PASSWORD=hunter2",
+        "secret_assign": 1
+      },
+      {
+        "text": "password: hunter2",
+        "secret_assign": 1
+      },
+      {
+        "text": "password=\"hunter2\"",
+        "secret_assign": 1
+      }
+    ],
+    "rules_negatives": [
+      {
+        "text": "max_tokens: 4096",
+        "secret_assign": 0
+      },
+      {
+        "text": "secretCount=3",
+        "secret_assign": 0
+      },
+      {
+        "text": "api_key_id=abc",
+        "secret_assign": 0
+      },
+      {
+        "text": "tokenizer",
+        "secret_assign": 0
+      },
+      {
+        "text": "user_password=\"x\"",
+        "secret_assign": 0
+      },
+      {
+        "text": "passwordField=\"x\"",
+        "secret_assign": 0
+      }
+    ]
+  },
+  "raw_commands": [
+    {
+      "cmd": "{ node --check lib/norm.js; echo \"norm_exit=$?\"; node --check lib/extract.js; echo \"extract_exit=$?\"; node --check lib/rules.js; echo \"rules_exit=$?\"; }",
+      "exit": 0,
+      "output": "norm_exit=0\nextract_exit=0\nrules_exit=0"
+    },
+    {
+      "cmd": "npm test",
+      "exit": 0,
+      "output": "npm notice run recon-graph@0.1.0 test\nnpm notice run node --test tests/*.test.js\nTAP version 13\n# (node:1642032) ExperimentalWarning: SQLite is an experimental feature and might change at any time\n# (Use `node --trace-warnings ...` to show where the warning was created)\n# Subtest: schema objects exist\nok 1 - schema objects exist\n  ---\n  duration_ms: 1.449386\n  type: 'test'\n  ...\n# Subtest: migrations are idempotent\nok 2 - migrations are idempotent\n  ---\n  duration_ms: 2.313371\n  type: 'test'\n  ...\n# Subtest: upsertNode inserts once and dedups by key\nok 3 - upsertNode inserts once and dedups by key\n  ---\n  duration_ms: 0.951176\n  type: 'test'\n  ...\n# Subtest: degree maintained by triggers\nok 4 - degree maintained by triggers\n  ---\n  duration_ms: 1.498917\n  type: 'test'\n  ...\n# Subtest: edge unique constraint\nok 5 - edge unique constraint\n  ---\n  duration_ms: 0.732061\n  type: 'test'\n  ...\n# Subtest: fts finds body text\nok 6 - fts finds body text\n  ---\n  duration_ms: 1.428066\n  type: 'test'\n  ...\n# Subtest: fts no LIMIT by default\nok 7 - fts no LIMIT by default\n  ---\n  duration_ms: 19.053001\n  type: 'test'\n  ...\n# Subtest: fts body truncation at 2 MiB\nok 8 - fts body truncation at 2 MiB\n  ---\n  duration_ms: 13.756734\n  type: 'test'\n  ...\n# Subtest: oversized body excluded from fts\nok 9 - oversized body excluded from fts\n  ---\n  duration_ms: 8.957685\n  type: 'test'\n  ...\n# Subtest: oversized body url still searchable\nok 10 - oversized body url still searchable\n  ---\n  duration_ms: 8.687327\n  type: 'test'\n  ...\n# Subtest: delta by rev\nok 11 - delta by rev\n  ---\n  duration_ms: 1.096043\n  type: 'test'\n  ...\n# Subtest: delta delivers edge after cursor\nok 12 - delta delivers edge after cursor\n  ---\n  duration_ms: 0.718447\n  type: 'test'\n  ...\n# Subtest: delta node after edge cursor\nok 13 - delta node after edge cursor\n  ---\n  duration_ms: 0.668884\n  type: 'test'\n  ...\n# Subtest: partial upsert preserves fields\nok 14 - partial upsert preserves fields\n  ---\n  duration_ms: 0.428862\n  type: 'test'\n  ...\n# Subtest: explicit null clears field\nok 15 - explicit null clears field\n  ---\n  duration_ms: 0.357901\n  type: 'test'\n  ...\n# Subtest: attrs key order is a no-op\nok 16 - attrs key order is a no-op\n  ---\n  duration_ms: 0.347802\n  type: 'test'\n  ...\n# Subtest: node delete clears fts\nok 17 - node delete clears fts\n  ---\n  duration_ms: 0.743312\n  type: 'test'\n  ...\n# Subtest: stats counts\nok 18 - stats counts\n  ---\n  duration_ms: 0.671229\n  type: 'test'\n  ...\n# Subtest: stats queue states\nok 19 - stats queue states\n  ---\n  duration_ms: 0.292429\n  type: 'test'\n  ...\n# Subtest: bulk upsert and edges in one transaction\nok 20 - bulk upsert and edges in one transaction\n  ---\n  duration_ms: 0.874374\n  type: 'test'\n  ...\n# Subtest: openReadOnly does not write\nok 21 - openReadOnly does not write\n  ---\n  duration_ms: 0.819012\n  type: 'test'\n  ...\n# Subtest: fixture set is complete\nok 22 - fixture set is complete\n  ---\n  duration_ms: 3.687436\n  type: 'test'\n  ...\n# Subtest: basic.html extracts 13 links and the title\nok 23 - basic.html extracts 13 links and the title\n  ---\n  duration_ms: 3.092098\n  type: 'test'\n  ...\n# Subtest: basic.html excludes mailto javascript data and fragment-only\nok 24 - basic.html excludes mailto javascript data and fragment-only\n  ---\n  duration_ms: 1.181622\n  type: 'test'\n  ...\n# Subtest: nested.html resolves relative forms against a deep base\nok 25 - nested.html resolves relative forms against a deep base\n  ---\n  duration_ms: 0.555496\n  type: 'test'\n  ...\n# Subtest: attrs.html dedupes equivalent URLs\nok 26 - attrs.html dedupes equivalent URLs\n  ---\n  duration_ms: 0.762548\n  type: 'test'\n  ...\n# Subtest: css.html resolves url() and @font-face relative to the stylesheet\nok 27 - css.html resolves url() and @font-face relative to the stylesheet\n  ---\n  duration_ms: 0.618311\n  type: 'test'\n  ...\n# Subtest: flag.html extracts only the single link\nok 28 - flag.html extracts only the single link\n  ---\n  duration_ms: 0.399408\n  type: 'test'\n  ...\n# Subtest: srcset keeps commas inside URLs and drops data URIs\nok 29 - srcset keeps commas inside URLs and drops data URIs\n  ---\n  duration_ms: 1.243696\n  type: 'test'\n  ...\n# Subtest: <base> applies document-wide and the first one wins\nok 30 - <base> applies document-wide and the first one wins\n  ---\n  duration_ms: 0.493631\n  type: 'test'\n  ...\n# Subtest: unquoted attribute keeps a trailing slash\nok 31 - unquoted attribute keeps a trailing slash\n  ---\n  duration_ms: 0.495134\n  type: 'test'\n  ...\n# Subtest: postfix increment then division keeps later links\nok 32 - postfix increment then division keeps later links\n  ---\n  duration_ms: 0.733705\n  type: 'test'\n  ...\n# Subtest: contextual keyword before division keeps later links\nok 33 - contextual keyword before division keeps later links\n  ---\n  duration_ms: 0.182567\n  type: 'test'\n  ...\n# Subtest: regex in statement position after if is not a link\nok 34 - regex in statement position after if is not a link\n  ---\n  duration_ms: 0.279867\n  type: 'test'\n  ...\n# Subtest: form empty action resolves to the document URL; poster keeps its attr\nok 35 - form empty action resolves to the document URL; poster keeps its attr\n  ---\n  duration_ms: 0.148945\n  type: 'test'\n  ...\n# Subtest: extractJs finds static path literals with an exact set\nok 36 - extractJs finds static path literals with an exact set\n  ---\n  duration_ms: 0.795549\n  type: 'test'\n  ...\n# Subtest: extractJs skips regex literals and keeps the following string\nok 37 - extractJs skips regex literals and keeps the following string\n  ---\n  duration_ms: 0.133276\n  type: 'test'\n  ...\n# Subtest: extractJs decodes string escapes before path matching\nok 38 - extractJs decodes string escapes before path matching\n  ---\n  duration_ms: 0.215207\n  type: 'test'\n  ...\n# Subtest: extractJs ignores non-path literals and interpolated templates\nok 39 - extractJs ignores non-path literals and interpolated templates\n  ---\n  duration_ms: 0.217231\n  type: 'test'\n  ...\n# Subtest: extractSitemap and extractRobots\nok 40 - extractSitemap and extractRobots\n  ---\n  duration_ms: 0.413994\n  type: 'test'\n  ...\n# Subtest: malformed html does not throw\nok 41 - malformed html does not throw\n  ---\n  duration_ms: 28.593662\n  type: 'test'\n  ...\n# Subtest: key normalises the criterion pair\nok 42 - key normalises the criterion pair\n  ---\n  duration_ms: 1.88545\n  type: 'test'\n  ...\n# Subtest: default ports are dropped\nok 43 - default ports are dropped\n  ---\n  duration_ms: 0.379671\n  type: 'test'\n  ...\n# Subtest: index.html collapses to directory root\nok 44 - index.html collapses to directory root\n  ---\n  duration_ms: 1.05663\n  type: 'test'\n  ...\n# Subtest: trailing slash and duplicate slashes\nok 45 - trailing slash and duplicate slashes\n  ---\n  duration_ms: 0.215478\n  type: 'test'\n  ...\n# Subtest: query sorting and duplicates\nok 46 - query sorting and duplicates\n  ---\n  duration_ms: 0.218113\n  type: 'test'\n  ...\n# Subtest: fragment removed\nok 47 - fragment removed\n  ---\n  duration_ms: 0.224405\n  type: 'test'\n  ...\n# Subtest: dot segments resolved\nok 48 - dot segments resolved\n  ---\n  duration_ms: 0.235886\n  type: 'test'\n  ...\n# Subtest: non-http schemes rejected\nok 49 - non-http schemes rejected\n  ---\n  duration_ms: 0.130762\n  type: 'test'\n  ...\n# Subtest: resolveUrl relative forms\nok 50 - resolveUrl relative forms\n  ---\n  duration_ms: 0.642136\n  type: 'test'\n  ...\n# Subtest: paramKey drops values\nok 51 - paramKey drops values\n  ---\n  duration_ms: 0.506094\n  type: 'test'\n  ...\n# Subtest: sameOrigin and originOf\nok 52 - sameOrigin and originOf\n  ---\n  duration_ms: 0.322896\n  type: 'test'\n  ...\n# Subtest: idempotent normalisation\nok 53 - idempotent normalisation\n  ---\n  duration_ms: 0.251685\n  type: 'test'\n  ...\n# Subtest: never throws on junk\nok 54 - never throws on junk\n  ---\n  duration_ms: 0.239272\n  type: 'test'\n  ...\n# Subtest: percent-encoding hex uppercased, reserved kept encoded\nok 55 - percent-encoding hex uppercased, reserved kept encoded\n  ---\n  duration_ms: 0.122255\n  type: 'test'\n  ...\n# Subtest: userinfo is stripped from keys\nok 56 - userinfo is stripped from keys\n  ---\n  duration_ms: 0.123308\n  type: 'test'\n  ...\n# Subtest: unicode host is lowercased\nok 57 - unicode host is lowercased\n  ---\n  duration_ms: 0.089074\n  type: 'test'\n  ...\n# Subtest: trailing dot host is canonicalised\nok 58 - trailing dot host is canonicalised\n  ---\n  duration_ms: 0.104173\n  type: 'test'\n  ...\n# Subtest: ipv6 literal keeps its form\nok 59 - ipv6 literal keeps its form\n  ---\n  duration_ms: 0.152101\n  type: 'test'\n  ...\n# Subtest: rule table exposes 7 rules with expected severities\nok 60 - rule table exposes 7 rules with expected severities\n  ---\n  duration_ms: 1.418669\n  type: 'test'\n  ...\n# Subtest: secrets.js yields exactly the expected findings\nok 61 - secrets.js yields exactly the expected findings\n  ---\n  duration_ms: 8.220664\n  type: 'test'\n  ...\n# Subtest: bundle.js yields private-key, todo and three stack trace findings\nok 62 - bundle.js yields private-key, todo and three stack trace findings\n  ---\n  duration_ms: 1.088088\n  type: 'test'\n  ...\n# Subtest: flag.html yields all seven rule kinds exactly once\nok 63 - flag.html yields all seven rule kinds exactly once\n  ---\n  duration_ms: 1.4573\n  type: 'test'\n  ...\n# Subtest: unquoted secret assignments are detected\nok 64 - unquoted secret assignments are detected\n  ---\n  duration_ms: 0.296638\n  type: 'test'\n  ...\n# Subtest: quoted json keys are detected\nok 65 - quoted json keys are detected\n  ---\n  duration_ms: 0.13535\n  type: 'test'\n  ...\n# Subtest: js object literal keys are detected\nok 66 - js object literal keys are detected\n  ---\n  duration_ms: 0.199248\n  type: 'test'\n  ...\n# Subtest: config-like keys are not false positives\nok 67 - config-like keys are not false positives\n  ---\n  duration_ms: 0.126574\n  type: 'test'\n  ...\n# Subtest: stack frame variants are detected\nok 68 - stack frame variants are detected\n  ---\n  duration_ms: 0.524739\n  type: 'test'\n  ...\n# Subtest: no false positives on benign text\nok 69 - no false positives on benign text\n  ---\n  duration_ms: 0.3579\n  type: 'test'\n  ...\n# Subtest: snippets are single-line and bounded\nok 70 - snippets are single-line and bounded\n  ---\n  duration_ms: 2.743334\n  type: 'test'\n  ...\n# Subtest: maxPerRule caps results\nok 71 - maxPerRule caps results\n  ---\n  duration_ms: 0.267504\n  type: 'test'\n  ...\n# Subtest: scan tolerates empty and huge input\nok 72 - scan tolerates empty and huge input\n  ---\n  duration_ms: 36.965436\n  type: 'test'\n  ...\n1..72\n# tests 72\n# suites 0\n# pass 72\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 137.140382"
+    },
+    {
+      "cmd": "node --test",
+      "exit": 0,
+      "output": "TAP version 13\n# (node:1642358) ExperimentalWarning: SQLite is an experimental feature and might change at any time\n# (Use `node --trace-warnings ...` to show where the warning was created)\n# Subtest: schema objects exist\nok 1 - schema objects exist\n  ---\n  duration_ms: 1.119226\n  type: 'test'\n  ...\n# Subtest: migrations are idempotent\nok 2 - migrations are idempotent\n  ---\n  duration_ms: 1.73362\n  type: 'test'\n  ...\n# Subtest: upsertNode inserts once and dedups by key\nok 3 - upsertNode inserts once and dedups by key\n  ---\n  duration_ms: 0.820765\n  type: 'test'\n  ...\n# Subtest: degree maintained by triggers\nok 4 - degree maintained by triggers\n  ---\n  duration_ms: 0.959331\n  type: 'test'\n  ...\n# Subtest: edge unique constraint\nok 5 - edge unique constraint\n  ---\n  duration_ms: 0.813993\n  type: 'test'\n  ...\n# Subtest: fts finds body text\nok 6 - fts finds body text\n  ---\n  duration_ms: 1.589024\n  type: 'test'\n  ...\n# Subtest: fts no LIMIT by default\nok 7 - fts no LIMIT by default\n  ---\n  duration_ms: 18.549393\n  type: 'test'\n  ...\n# Subtest: fts body truncation at 2 MiB\nok 8 - fts body truncation at 2 MiB\n  ---\n  duration_ms: 15.227871\n  type: 'test'\n  ...\n# Subtest: oversized body excluded from fts\nok 9 - oversized body excluded from fts\n  ---\n  duration_ms: 8.418782\n  type: 'test'\n  ...\n# Subtest: oversized body url still searchable\nok 10 - oversized body url still searchable\n  ---\n  duration_ms: 8.677469\n  type: 'test'\n  ...\n# Subtest: delta by rev\nok 11 - delta by rev\n  ---\n  duration_ms: 1.07251\n  type: 'test'\n  ...\n# Subtest: delta delivers edge after cursor\nok 12 - delta delivers edge after cursor\n  ---\n  duration_ms: 0.723295\n  type: 'test'\n  ...\n# Subtest: delta node after edge cursor\nok 13 - delta node after edge cursor\n  ---\n  duration_ms: 0.921701\n  type: 'test'\n  ...\n# Subtest: partial upsert preserves fields\nok 14 - partial upsert preserves fields\n  ---\n  duration_ms: 0.509651\n  type: 'test'\n  ...\n# Subtest: explicit null clears field\nok 15 - explicit null clears field\n  ---\n  duration_ms: 0.391072\n  type: 'test'\n  ...\n# Subtest: attrs key order is a no-op\nok 16 - attrs key order is a no-op\n  ---\n  duration_ms: 0.345318\n  type: 'test'\n  ...\n# Subtest: node delete clears fts\nok 17 - node delete clears fts\n  ---\n  duration_ms: 0.720239\n  type: 'test'\n  ...\n# Subtest: stats counts\nok 18 - stats counts\n  ---\n  duration_ms: 0.683401\n  type: 'test'\n  ...\n# Subtest: stats queue states\nok 19 - stats queue states\n  ---\n  duration_ms: 0.284445\n  type: 'test'\n  ...\n# Subtest: bulk upsert and edges in one transaction\nok 20 - bulk upsert and edges in one transaction\n  ---\n  duration_ms: 0.833839\n  type: 'test'\n  ...\n# Subtest: openReadOnly does not write\nok 21 - openReadOnly does not write\n  ---\n  duration_ms: 0.783536\n  type: 'test'\n  ...\n# Subtest: fixture set is complete\nok 22 - fixture set is complete\n  ---\n  duration_ms: 4.121929\n  type: 'test'\n  ...\n# Subtest: basic.html extracts 13 links and the title\nok 23 - basic.html extracts 13 links and the title\n  ---\n  duration_ms: 2.746861\n  type: 'test'\n  ...\n# Subtest: basic.html excludes mailto javascript data and fragment-only\nok 24 - basic.html excludes mailto javascript data and fragment-only\n  ---\n  duration_ms: 0.708198\n  type: 'test'\n  ...\n# Subtest: nested.html resolves relative forms against a deep base\nok 25 - nested.html resolves relative forms against a deep base\n  ---\n  duration_ms: 0.521473\n  type: 'test'\n  ...\n# Subtest: attrs.html dedupes equivalent URLs\nok 26 - attrs.html dedupes equivalent URLs\n  ---\n  duration_ms: 0.803634\n  type: 'test'\n  ...\n# Subtest: css.html resolves url() and @font-face relative to the stylesheet\nok 27 - css.html resolves url() and @font-face relative to the stylesheet\n  ---\n  duration_ms: 1.044058\n  type: 'test'\n  ...\n# Subtest: flag.html extracts only the single link\nok 28 - flag.html extracts only the single link\n  ---\n  duration_ms: 0.440423\n  type: 'test'\n  ...\n# Subtest: srcset keeps commas inside URLs and drops data URIs\nok 29 - srcset keeps commas inside URLs and drops data URIs\n  ---\n  duration_ms: 1.474252\n  type: 'test'\n  ...\n# Subtest: <base> applies document-wide and the first one wins\nok 30 - <base> applies document-wide and the first one wins\n  ---\n  duration_ms: 0.638719\n  type: 'test'\n  ...\n# Subtest: unquoted attribute keeps a trailing slash\nok 31 - unquoted attribute keeps a trailing slash\n  ---\n  duration_ms: 0.527624\n  type: 'test'\n  ...\n# Subtest: postfix increment then division keeps later links\nok 32 - postfix increment then division keeps later links\n  ---\n  duration_ms: 0.741889\n  type: 'test'\n  ...\n# Subtest: contextual keyword before division keeps later links\nok 33 - contextual keyword before division keeps later links\n  ---\n  duration_ms: 0.192946\n  type: 'test'\n  ...\n# Subtest: regex in statement position after if is not a link\nok 34 - regex in statement position after if is not a link\n  ---\n  duration_ms: 0.291217\n  type: 'test'\n  ...\n# Subtest: form empty action resolves to the document URL; poster keeps its attr\nok 35 - form empty action resolves to the document URL; poster keeps its attr\n  ---\n  duration_ms: 0.156058\n  type: 'test'\n  ...\n# Subtest: extractJs finds static path literals with an exact set\nok 36 - extractJs finds static path literals with an exact set\n  ---\n  duration_ms: 0.85061\n  type: 'test'\n  ...\n# Subtest: extractJs skips regex literals and keeps the following string\nok 37 - extractJs skips regex literals and keeps the following string\n  ---\n  duration_ms: 0.140329\n  type: 'test'\n  ...\n# Subtest: extractJs decodes string escapes before path matching\nok 38 - extractJs decodes string escapes before path matching\n  ---\n  duration_ms: 0.223252\n  type: 'test'\n  ...\n# Subtest: extractJs ignores non-path literals and interpolated templates\nok 39 - extractJs ignores non-path literals and interpolated templates\n  ---\n  duration_ms: 0.308479\n  type: 'test'\n  ...\n# Subtest: extractSitemap and extractRobots\nok 40 - extractSitemap and extractRobots\n  ---\n  duration_ms: 0.5416\n  type: 'test'\n  ...\n# Subtest: malformed html does not throw\nok 41 - malformed html does not throw\n  ---\n  duration_ms: 30.43829\n  type: 'test'\n  ...\n# Subtest: key normalises the criterion pair\nok 42 - key normalises the criterion pair\n  ---\n  duration_ms: 1.415372\n  type: 'test'\n  ...\n# Subtest: default ports are dropped\nok 43 - default ports are dropped\n  ---\n  duration_ms: 0.294513\n  type: 'test'\n  ...\n# Subtest: index.html collapses to directory root\nok 44 - index.html collapses to directory root\n  ---\n  duration_ms: 1.057652\n  type: 'test'\n  ...\n# Subtest: trailing slash and duplicate slashes\nok 45 - trailing slash and duplicate slashes\n  ---\n  duration_ms: 0.204377\n  type: 'test'\n  ...\n# Subtest: query sorting and duplicates\nok 46 - query sorting and duplicates\n  ---\n  duration_ms: 0.216299\n  type: 'test'\n  ...\n# Subtest: fragment removed\nok 47 - fragment removed\n  ---\n  duration_ms: 0.120522\n  type: 'test'\n  ...\n# Subtest: dot segments resolved\nok 48 - dot segments resolved\n  ---\n  duration_ms: 0.127475\n  type: 'test'\n  ...\n# Subtest: non-http schemes rejected\nok 49 - non-http schemes rejected\n  ---\n  duration_ms: 0.121244\n  type: 'test'\n  ...\n# Subtest: resolveUrl relative forms\nok 50 - resolveUrl relative forms\n  ---\n  duration_ms: 0.433921\n  type: 'test'\n  ...\n# Subtest: paramKey drops values\nok 51 - paramKey drops values\n  ---\n  duration_ms: 0.394569\n  type: 'test'\n  ...\n# Subtest: sameOrigin and originOf\nok 52 - sameOrigin and originOf\n  ---\n  duration_ms: 0.298051\n  type: 'test'\n  ...\n# Subtest: idempotent normalisation\nok 53 - idempotent normalisation\n  ---\n  duration_ms: 0.207933\n  type: 'test'\n  ...\n# Subtest: never throws on junk\nok 54 - never throws on junk\n  ---\n  duration_ms: 0.200531\n  type: 'test'\n  ...\n# Subtest: percent-encoding hex uppercased, reserved kept encoded\nok 55 - percent-encoding hex uppercased, reserved kept encoded\n  ---\n  duration_ms: 0.115834\n  type: 'test'\n  ...\n# Subtest: userinfo is stripped from keys\nok 56 - userinfo is stripped from keys\n  ---\n  duration_ms: 0.120552\n  type: 'test'\n  ...\n# Subtest: unicode host is lowercased\nok 57 - unicode host is lowercased\n  ---\n  duration_ms: 0.08674\n  type: 'test'\n  ...\n# Subtest: trailing dot host is canonicalised\nok 58 - trailing dot host is canonicalised\n  ---\n  duration_ms: 0.092461\n  type: 'test'\n  ...\n# Subtest: ipv6 literal keeps its form\nok 59 - ipv6 literal keeps its form\n  ---\n  duration_ms: 0.142944\n  type: 'test'\n  ...\n# Subtest: rule table exposes 7 rules with expected severities\nok 60 - rule table exposes 7 rules with expected severities\n  ---\n  duration_ms: 1.459454\n  type: 'test'\n  ...\n# Subtest: secrets.js yields exactly the expected findings\nok 61 - secrets.js yields exactly the expected findings\n  ---\n  duration_ms: 6.737528\n  type: 'test'\n  ...\n# Subtest: bundle.js yields private-key, todo and three stack trace findings\nok 62 - bundle.js yields private-key, todo and three stack trace findings\n  ---\n  duration_ms: 2.707098\n  type: 'test'\n  ...\n# Subtest: flag.html yields all seven rule kinds exactly once\nok 63 - flag.html yields all seven rule kinds exactly once\n  ---\n  duration_ms: 0.978537\n  type: 'test'\n  ...\n# Subtest: unquoted secret assignments are detected\nok 64 - unquoted secret assignments are detected\n  ---\n  duration_ms: 0.301366\n  type: 'test'\n  ...\n# Subtest: quoted json keys are detected\nok 65 - quoted json keys are detected\n  ---\n  duration_ms: 0.145228\n  type: 'test'\n  ...\n# Subtest: js object literal keys are detected\nok 66 - js object literal keys are detected\n  ---\n  duration_ms: 0.179701\n  type: 'test'\n  ...\n# Subtest: config-like keys are not false positives\nok 67 - config-like keys are not false positives\n  ---\n  duration_ms: 0.129669\n  type: 'test'\n  ...\n# Subtest: stack frame variants are detected\nok 68 - stack frame variants are detected\n  ---\n  duration_ms: 0.549975\n  type: 'test'\n  ...\n# Subtest: no false positives on benign text\nok 69 - no false positives on benign text\n  ---\n  duration_ms: 0.571866\n  type: 'test'\n  ...\n# Subtest: snippets are single-line and bounded\nok 70 - snippets are single-line and bounded\n  ---\n  duration_ms: 3.370532\n  type: 'test'\n  ...\n# Subtest: maxPerRule caps results\nok 71 - maxPerRule caps results\n  ---\n  duration_ms: 0.226919\n  type: 'test'\n  ...\n# Subtest: scan tolerates empty and huge input\nok 72 - scan tolerates empty and huge input\n  ---\n  duration_ms: 37.688485\n  type: 'test'\n  ...\n1..72\n# tests 72\n# suites 0\n# pass 72\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 145.634446"
+    },
+    {
+      "cmd": "ls -1 tests/fixtures/html tests/fixtures/js",
+      "exit": 0,
+      "output": "tests/fixtures/html:\nattrs.html\nbasic.html\ncss.html\nflag.html\nnested.html\n\ntests/fixtures/js:\nbundle.js\nendpoints.js\nsecrets.js"
+    },
+    {
+      "cmd": "node .probe-tmp/verify-final.js",
+      "exit": 0,
+      "output": "{\n  \"criterion\": {\n    \"key_pair_equal\": true,\n    \"key_pair\": [\n      \"GET https://host/a?a=1&b=2\",\n      \"GET https://host/a?a=1&b=2\",\n      \"GET https://host/a?a=1&b=2\"\n    ],\n    \"html_fixtures\": 5,\n    \"js_fixtures\": 3,\n    \"basic_links\": 13,\n    \"nested_links\": 6,\n    \"attrs_links\": 5,\n    \"css_links\": 4,\n    \"flag_links\": 1,\n    \"endpoints_links\": 6,\n    \"bundle_links\": 1\n  },\n  \"detail\": {\n    \"html_files\": [\n      \"attrs.html\",\n      \"basic.html\",\n      \"css.html\",\n      \"flag.html\",\n      \"nested.html\"\n    ],\n    \"js_files\": [\n      \"bundle.js\",\n      \"endpoints.js\",\n      \"secrets.js\"\n    ],\n    \"basic\": [\n      \"http://site.test/css/app.css\",\n      \"http://site.test/js/main.js\",\n      \"http://site.test/refresh-target\",\n      \"http://site.test/img/inline.png\",\n      \"http://site.test/about\",\n      \"https://other.test/x\",\n      \"http://cdn.test/lib.js\",\n      \"http://site.test/map\",\n      \"http://site.test/img/logo.png\",\n      \"http://site.test/img/logo@2x.png\",\n      \"http://site.test/frame.html\",\n      \"http://site.test/contact\",\n      \"http://site.test/img/bg.png\"\n    ],\n    \"nested\": [\n      \"http://site.test/x\",\n      \"http://site.test/dir/y\",\n      \"http://site.test/dir/page.html?q=1\",\n      \"http://site.test/root\",\n      \"https://site.test/b\",\n      \"http://site.test/dir/sub/page.html\"\n    ],\n    \"attrs\": [\n      \"http://site.test/a?a=1&b=2\",\n      \"https://host.test/q?y=2&z=1\",\n      \"http://host.test/\",\n      \"http://site.test/\",\n      \"http://site.test/a/b\"\n    ],\n    \"css\": [\n      \"http://site.test/fonts/x.woff2\",\n      \"http://site.test/img/bg.png\",\n      \"https://cdn.test/i.svg\",\n      \"http://site.test/css/site.css\"\n    ],\n    \"flag\": [\n      \"http://site.test/linked\"\n    ],\n    \"endpoints\": [\n      \"http://site.test/api/v1/users\",\n      \"http://site.test/api/v1/admin\",\n      \"http://site.test/api/v1/login\",\n      \"https://api.test/v1/x\",\n      \"http://site.test/static/app.4f2c.js\",\n      \"http://site.test/api/v3\"\n    ],\n    \"bundle\": [\n      \"http://site.test/api/v2/orders\"\n    ]\n  },\n  \"final_fixes\": {\n    \"base_unquoted_slash\": true,\n    \"js_postfix_division\": true,\n    \"js_statement_regex\": true,\n    \"js_regex_assign_no_leak\": true\n  },\n  \"probes\": {\n    \"base_split\": {\n      \"base\": \"http://site.test/sub/\",\n      \"urls\": [\n        \"http://site.test/sub/after\"\n      ]\n    },\n    \"base_split_rootref\": {\n      \"base\": \"http://site.test/sub/\",\n      \"urls\": [\n        \"http://site.test/x\"\n      ]\n    },\n    \"endpoints_has_v3\": true,\n    \"endpoints_exact_6\": true,\n    \"base_split_rootref_ok\": true,\n    \"js_postfix_inc\": [\n      \"http://site.test/api/v1/real\"\n    ],\n    \"js_postfix_dec\": [\n      \"http://site.test/api/v1/real\"\n    ],\n    \"js_statement_regex\": [\n      \"http://site.test/api/v1/real\"\n    ],\n    \"js_regex_assign\": [\n      \"http://site.test/api/v1/real\"\n    ],\n    \"srcset\": [\n      \"https://cdn.test/a,b.png\",\n      \"http://cdn.test/c\",\n      \"http://site.test/ok.png\"\n    ],\n    \"srcset_ok\": true,\n    \"base_first_wins\": [\n      \"http://site.test/sub/before\",\n      \"http://site.test/sub/after\"\n    ],\n    \"base_first_wins_ok\": true\n  },\n  \"rules\": {\n    \"json_keys\": true,\n    \"positives\": [\n      {\n        \"text\": \"{\\\"token\\\": \\\"abcdef\\\"}\",\n        \"secret_assign\": 1\n      },\n      {\n        \"text\": \"{\\\"password\\\": \\\"hunter2\\\"}\",\n        \"secret_assign\": 1\n      },\n      {\n        \"text\": \"{\\\"api_key\\\": \\\"abcd\\\"}\",\n        \"secret_assign\": 1\n      },\n      {\n        \"text\": \"token: \\\"abcdef\\\"\",\n        \"secret_assign\": 1\n      },\n      {\n        \"text\": \"password=hunter2\",\n        \"secret_assign\": 1\n      },\n      {\n        \"text\": \"DB_PASSWORD=hunter2\",\n        \"secret_assign\": 1\n      },\n      {\n        \"text\": \"password: hunter2\",\n        \"secret_assign\": 1\n      },\n      {\n        \"text\": \"password=\\\"hunter2\\\"\",\n        \"secret_assign\": 1\n      }\n    ],\n    \"negatives\": [\n      {\n        \"text\": \"max_tokens: 4096\",\n        \"secret_assign\": 0\n      },\n      {\n        \"text\": \"secretCount=3\",\n        \"secret_assign\": 0\n      },\n      {\n        \"text\": \"api_key_id=abc\",\n        \"secret_assign\": 0\n      },\n      {\n        \"text\": \"tokenizer\",\n        \"secret_assign\": 0\n      },\n      {\n        \"text\": \"user_password=\\\"x\\\"\",\n        \"secret_assign\": 0\n      },\n      {\n        \"text\": \"passwordField=\\\"x\\\"\",\n        \"secret_assign\": 0\n      }\n    ],\n    \"negatives_clean\": true,\n    \"secrets_fixture\": {\n      \"flag\": 1,\n      \"ctf\": 1,\n      \"aws-key\": 1,\n      \"secret-assign\": 3,\n      \"todo\": 1\n    },\n    \"bundle_fixture\": {\n      \"private-key\": 1,\n      \"todo\": 1,\n      \"stacktrace\": 3\n    },\n    \"flag_fixture\": {\n      \"flag\": 1,\n      \"ctf\": 1,\n      \"aws-key\": 1,\n      \"secret-assign\": 1,\n      \"private-key\": 1,\n      \"stacktrace\": 1,\n      \"todo\": 1\n    },\n    \"secrets\": {\n      \"flag\": 1,\n      \"ctf\": 1,\n      \"aws-key\": 1,\n      \"secret-assign\": 3,\n      \"todo\": 1\n    },\n    \"bundle\": {\n      \"private-key\": 1,\n      \"todo\": 1,\n      \"stacktrace\": 3\n    },\n    \"flag\": {\n      \"flag\": 1,\n      \"ctf\": 1,\n      \"aws-key\": 1,\n      \"secret-assign\": 1,\n      \"private-key\": 1,\n      \"stacktrace\": 1,\n      \"todo\": 1\n    },\n    \"secrets_ok\": true,\n    \"bundle_ok\": true,\n    \"flag_ok\": true\n  },\n  \"pathological\": {\n    \"extract_2mb_ms\": 345.730259,\n    \"extract_2mb_bytes\": 2097160,\n    \"extract_2mb_links\": 1,\n    \"scan_4mb_ms\": 15.555095,\n    \"scan_4mb_bytes\": 4194325,\n    \"scan_4mb_findings\": 600\n  },\n  \"pathological_ok\": true\n}"
+    }
+  ],
+  "failures": []
+}

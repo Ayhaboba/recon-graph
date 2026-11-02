@@ -1,0 +1,160 @@
+{
+  "stage": 1,
+  "retry": 1,
+  "reviewer": "worker-agent (read-only stand-in; reviewer-agent endpoint down)",
+  "verdict": "PASS",
+  "score": 86,
+  "previous_high_issues": [
+    {
+      "id": "H1",
+      "status": "fixed",
+      "evidence": "lib/db.js:424 guards on Buffer.byteLength(sourceText,'utf8') > 2 MiB; 425-427 set text=slice, ftsBody=null, ftsTruncated=1; 464-471 upsert fts_docs with body=ftsBody. Probe: 2,097,452-byte body => bodies.text 2,097,152 chars/bytes, fts_truncated=1, fts_docs.body=NULL, node_fts.body=NULL, search(HEADTOKEN)=0, search(TAILTOKEN)=0, search('oversized')=1 via url, search('Oversized')=1 via title, FTS5 integrity-check ok. putBody small->big->small transition removed the old token and re-indexed the new one. No crash on NULL body; snippet maps to empty string at lib/db.js:514-516."
+    },
+    {
+      "id": "H2",
+      "status": "fixed",
+      "evidence": "lib/migrate.js:99-103 creates rev_seq(id=1,value); 207-226 both nodes and edges rev triggers allocate from rev_seq. No 'MAX(rev) FROM nodes/edges' remains anywhere in lib/. Probe on one scan: baseline cursor=5; addEdge => edge rev=8 plus degree-bumped endpoints rev 6/7; delta(5) returned the edge (id 1, rev 8) and endpoints; insert node => rev 9; delta(8) returned that node only. rev_seq.value=9, all node+edge revs unique. lib/db.js:520-567 computes cursor as max(rev) across returned rows floored at afterRev and runs both SELECTs inside one transaction."
+    }
+  ],
+  "checks": [
+    {
+      "id": "1-h1-oversized-body-excluded",
+      "result": "pass",
+      "evidence": "lib/db.js:424-427,464-471; probe: HEADTOKEN/TAILTOKEN in a 2.75 MB body => 0 FTS hits, fts_docs.body=NULL, fts_truncated=1; url/title still match. Multibyte probe (1,100,000 Cyrillic chars = 2,200,000 bytes) => body excluded from FTS and fts_truncated=1, but bodies.text is stored as 2,200,000 bytes because slice() caps UTF-16 code units, not bytes (low issue)."
+    },
+    {
+      "id": "2-h2-single-rev-sequence",
+      "result": "pass",
+      "evidence": "lib/migrate.js:99-103,207-226; lib/db.js:520-567. Grep for MAX(rev) in lib/ and tests/ => no matches. Probe edge-after-cursor and node-after-cursor both delivered; cursor advances; one monotonic sequence."
+    },
+    {
+      "id": "3-schema-fidelity",
+      "result": "pass",
+      "evidence": "lib/migrate.js:98-204. PRAGMA table_info matches spec §5 for scans/nodes/edges/bodies/fts_docs/findings/queue; UNIQUE(scan_id,key), UNIQUE(scan_id,src,dst,kind), UNIQUE(scan_id,url,kind), all FKs with ON DELETE CASCADE, all 9 named indexes including queue_state(scan_id,state,priority DESC). Additive rev_seq table and nodes_ad trigger are the only schema deltas and both are documented in .crush/state/deviations.md:6-7. deviations.md:8-10 also documents the oversized-body FTS exclusion, engines >=22.5, and test invocation."
+    },
+    {
+      "id": "4-trigger-semantics",
+      "result": "pass",
+      "evidence": "lib/migrate.js:207-265. nodes_rev_update is AFTER UPDATE OF type,status,degree,attrs_json and rev is absent from the column list; probe raw 'UPDATE nodes SET rev=rev' did not bump rev, label-only update did not bump, status update did. edges_rev_insert allocates on INSERT. edges_degree_insert/delete move both endpoints +1/-1 (probe 1,1 -> 0,0). fts_docs_ai/ad/au use the fts5 'delete' command with OLD values; direct ai/au/ad probe gave 1 -> (0,1) -> 0. nodes_ad deletes fts_docs on node delete; cascade scan delete also left 0 orphan FTS rows."
+    },
+    {
+      "id": "5-m1-m2-upsert-semantics",
+      "result": "pass",
+      "evidence": "lib/db.js:295-304 collect only fields present in the payload; 334-356 build a SET list of changed columns only; 79-94 recursively sort attrs keys. Probe: full node re-upserted with only {key,type,origin} preserved label/url/method/status/depth/attrs_json and rev unchanged; explicit null cleared label/url/method/status/depth and set attrs_json='{}'; {b:{d:4,c:3},a:1} then {a:1,b:{c:3,d:4}} kept rev unchanged and stored canonical JSON. Caveat: a present-but-undefined field is treated as explicit null (low)."
+    },
+    {
+      "id": "6-m5-m6-m7",
+      "result": "pass",
+      "evidence": "stats (lib/db.js:569-613) returns pending/inflight/done/err; probe with pending/inflight/done/err/skip => 1/1/1/1 (skip ignored). openReadOnly (lib/db.js:189-219) opens {readOnly:true}, applies only busy_timeout, skips migrations and write PRAGMAs; probe write and DDL throw 'attempt to write a readonly database'; missing file throws and is not created; an existing empty file stays user_version=0 with 0 tables. search (lib/db.js:130-137,501-508) rethrows non-FTS errors: dropping node_fts/fts_docs/findings or renaming a column produced thrown errors; malformed FTS quote returned []."
+    },
+    {
+      "id": "7-transaction-quality",
+      "result": "pass",
+      "evidence": "withTransaction (lib/migrate.js:44-96) BEGIN IMMEDIATE at depth 0 and SAVEPOINT sp_N when nested; probe inner rollback kept the outer row, outer rollback removed it, db.isTransaction was false afterward; applyMigrations inside an already-open transaction succeeded (savepoint path). upsertNodes (lib/db.js:361-369), addEdges (395-410), and putBody (438-472) each run in one transaction; forced failures rolled back fully (node count 0, edge count 0, bodies 0) with no open transaction. Residual: prepared statements are still re-created inside the per-row loops (medium M4R). No dangling BEGIN path observed."
+    },
+    {
+      "id": "8-selftest-integrity",
+      "result": "pass",
+      "evidence": "lib/db.js:1114-1117 computes fail from failed check records; 1128-1136 exits 1 when selfTest() returns false. Normal run: 20 PASS, SUMMARY pass=20 fail=0, exit 0. Forced failure TMPDIR=/proc/nonexistent-recon-review => 19 FAIL, PASS only for cleanup, SUMMARY pass=1 fail=19, exit 1. The 20 checks cover the stage criterion plus H1/H2/M1/M2/M3/M5/M6 and include real assertions for oversized-body exclusion, edge-after-cursor, partial upsert, attrs key order, node-delete FTS cleanup, stats states, and read-only open."
+    },
+    {
+      "id": "9-test-integrity",
+      "result": "pass",
+      "evidence": "tests/db.test.js has 21 tests; `npm test` => 21 pass, 0 fail, 0 skipped, exit 0. It hard-requires node:sqlite at line 19 (no silent skip), and the old dead 'needle-at-tail' assertion is gone. The oversized tests assert HEADTOKEN/TAILTOKEN 0 hits and fts_docs.body=NULL; delta tests cover edge-after-cursor and node-after-edge-cursor; upsert tests cover partial, explicit null, and attrs order; read-only test asserts write throws. Two weak shape assertions remain ('rule' in hit, snippet typeof string) but they are not load-bearing and do not hide a broken driver."
+    },
+    {
+      "id": "10-scope-and-rev-ownership",
+      "result": "pass",
+      "evidence": "lib/ contains only db.js and migrate.js; grep for node:http/http/https/ws/fetch in lib/ => no matches. lib/db.js contains no SQL assignment to nodes.rev/edges.rev or degree; the only 'rev' occurrences are the local delta cursor (lib/db.js:534-541) and self-test/read output. Trigger SQL in lib/migrate.js is the sole writer of rev/degree."
+    },
+    {
+      "id": "11-stage-3-5-readiness",
+      "result": "pass",
+      "evidence": "Probe: upsertNodes with 200 nodes => 200 rows in ~9.4 ms; addEdges with 200 edges => 200 rows in ~8.9 ms, both in one transaction each; delta on the openReadOnly wrapper worked, saw a writer's committed insert, and both delta SELECTs run inside one read transaction (lib/db.js:524-566). openReadOnly supports a read-only server: reads/search/stats/delta work, writes and DDL fail. Residual performance/integrity notes: per-row prepare churn (medium M4R) and addEdge's INSERT OR IGNORE silently drops malformed/cross-scan edges (medium M8); no deletion tombstones (low L10)."
+    }
+  ],
+  "issues": {
+    "critical": [],
+    "high": [],
+    "medium": [
+      {
+        "id": "M4R",
+        "file": "lib/db.js:306-317,351-356,361-369,385-390,395-410",
+        "title": "Bulk writers are one transaction each but still prepare per row",
+        "evidence": "upsertNodes maps upsertNode over the array; upsertNode prepares SELECT and INSERT/UPDATE on every call. addEdges loops addEdge, which prepares the INSERT on every edge. A 200-row batch is usable (~9 ms) but pays ~400 prepares for nodes and 200 for edges; the previous M4 request to cache prepared statements was not implemented.",
+        "fix": "Move prepare calls outside the loops or cache statements on the db wrapper; keep the single-transaction behavior."
+      },
+      {
+        "id": "M8",
+        "file": "lib/db.js:379-410",
+        "title": "addEdge/addEdges silently ignore malformed or cross-scan edges",
+        "evidence": "addEdge uses INSERT OR IGNORE and validates only kind. Probe addEdge(scan, nodeId, null, 'link') returned false with no error. src/dst are not checked to belong to scanId, so an edge can link nodes from another scan (FK only checks node existence); INSERT OR IGNORE also hides NOT NULL violations.",
+        "fix": "Validate src/dst scan ownership before insert, use plain INSERT ... ON CONFLICT(scan_id,src,dst,kind) DO NOTHING, and throw on NOT NULL/FK violations instead of returning false silently."
+      }
+    ],
+    "low": [
+      {
+        "id": "L14",
+        "file": "lib/db.js:424-425",
+        "title": "bodies.text preview cap is applied in UTF-16 code units, not UTF-8 bytes",
+        "evidence": "The FTS guard correctly uses Buffer.byteLength, but sourceText.slice(0, FTS_TEXT_CAP) caps characters. Probe with 1,100,000 Cyrillic chars (2,200,000 bytes) stored 2,200,000 bytes in bodies.text while still excluding it from FTS. Spec §5 does not require a byte cap on bodies.text, so this is a preview-size nuance, not an index leak."
+      },
+      {
+        "id": "L15",
+        "file": "lib/db.js:295-304",
+        "title": "Present-but-undefined fields are treated as explicit null",
+        "evidence": "incoming is built with `field in node`; {label: undefined} therefore clears label instead of keeping it. Omitted fields behave correctly (M1 fixed); undefined-valued fields are an edge case not covered by tests."
+      },
+      {
+        "id": "L16",
+        "file": "lib/db.js:423-428",
+        "title": "input.truncated forces fts_truncated=1 even when the body is fully indexed",
+        "evidence": "ftsTruncated starts as input.truncated ? 1 : 0; a small body passed with truncated:true is indexed in full but reported as fts_truncated=1. The spec flag is meant to say the body is absent from the index."
+      },
+      {
+        "id": "L17",
+        "file": "lib/migrate.js:81-95",
+        "title": "withTransaction RELEASE failure path can leave depth stale",
+        "evidence": "The success-path RELEASE sp at line 93 is outside the try/catch; if RELEASE throws, writeDepth is not reset and the caller may see a still-open savepoint. Not reachable in normal operation."
+      },
+      {
+        "id": "L18",
+        "file": "lib/db.js:520-567",
+        "title": "No deletion tombstones in delta",
+        "evidence": "delta selects rows with rev > cursor; edge DELETE does not bump edge rev and nodes/edges have no deleted flag. Degree triggers do surface endpoint changes, but a deleted edge itself is never delivered. Stage 1 does not delete edges during normal crawl; stage 3/7 should decide on tombstones."
+      },
+      {
+        "id": "L19",
+        "file": "lib/db.js:483-516",
+        "title": "search rule/snippet mapping is approximate",
+        "evidence": "rule comes from MIN(findings.id) per node, not necessarily the matched finding; a title/url-only match returns snippet='' (probe confirmed). Spec §6 shows rule in hits, so this is a stage-4 mapping gap rather than a stage-1 functional failure."
+      },
+      {
+        "id": "L20",
+        "file": "lib/db.js:130-137",
+        "title": "isFtsSyntaxError accepts any errcode-1 message containing 'syntax' or 'malformed'",
+        "evidence": "A hypothetical internal SQL syntax error or FTS index 'malformed' error with errcode 1 would be downgraded to no hits. Missing tables/columns were rethrown in probes; the broad match is a residual hardening gap."
+      },
+      {
+        "id": "L21",
+        "file": "tests/db.test.js:553-590; lib/db.js:1114-1117",
+        "title": "Bulk atomicity and fts_docs UPDATE are exercised only by independent probes, not the committed suites",
+        "evidence": "The suite asserts bulk counts and re-upsert results but not rollback on a mid-batch failure; putBody's fts_docs ON CONFLICT update path is not covered. Independent probes confirmed both work, but the guarantees are not regression-tested."
+      },
+      {
+        "id": "L22",
+        "file": "lib/db.js:124-131; lib/db.js:608-610",
+        "title": "Broad error swallowing remains around PRAGMAs and the stats queue query",
+        "evidence": "openDb swallows every PRAGMA failure (including foreign_keys=ON), and stats catches any queue query error and reports zeroes. Normal file DBs probe foreign_keys=1; this is a low-risk diagnostic gap."
+      }
+    ]
+  },
+  "file_sha256": {
+    "lib/db.js": "1008ac9f7f63e3ef6e8cae45f0a53aa96651ca72f4181912c1eebf2eb3b9bce8",
+    "lib/migrate.js": "9dfc0cf5c2c5ed9f882a88f678523b45a1e811eff19810f77032aa111bd2919f",
+    "tests/db.test.js": "f0b4e4cf269832a73c69710dd82b79c59e5d02892fd6a644f6550033ffc34b79",
+    "package.json": "151fee9f20ed602e8178981641e8dfd944260ff0be074cdda5c4542ae4eab4e1"
+  },
+  "criterion_met": true,
+  "notes": "H1 and H2 are fixed and independently reproduced. `node lib/db.js --self-test` => 20 PASS, exit 0; forced failure => exit 1 with 19 fails. `npm test` => 21/21 pass, 0 skipped. Schema matches spec §5 with only the documented additive rev_seq table and nodes_ad trigger; deviations.md documents all five required deltas. No project source was modified, created, or deleted by this review; the hashes above are the state reviewed. Residual non-blocking issues are kept in medium/low: per-row prepared-statement churn (M4R), silent malformed/cross-scan edges (M8), multibyte preview cap nuance, undefined-field semantics, tombstones, and test-coverage gaps."
+}

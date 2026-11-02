@@ -1,0 +1,66 @@
+{
+  "worker_id": "worker-1",
+  "stage": 6,
+  "focus_area": "web_client",
+  "timestamp": "2026-11-02T00:26:52Z",
+  "status": "success",
+  "files_owned": ["web/recon.js", ".crush/plan.json"],
+  "assigned_tasks": 2,
+  "tasks_completed": 2,
+  "tasks_failed": 0,
+  "can_continue": true,
+  "api": {
+    "ready": "Promise<void>",
+    "renderer": "Renderer|null",
+    "scans": "array",
+    "currentScanId": "number|null",
+    "datasetNodeCount()": "number",
+    "nodeIds()": "string[]",
+    "positions()": "{id:{x:number,y:number}}",
+    "objectIds()": "{id:number}",
+    "edgeCount()": "number",
+    "switchScan(id)": "Promise<void>",
+    "statusText()": "string",
+    "lastMessage()": "object|null"
+  },
+  "browser_check": {
+    "status": "pass",
+    "command": "node .v6-verify.js (headless /usr/bin/chromium over CDP, two fixture scans + live scanner)",
+    "observed": {
+      "status_text": "nodes 9 · edges 9 · pending 0",
+      "status_samples": ["nodes 8 · edges 7 · pending 0", "nodes 9 · edges 9 · pending 0"],
+      "error_overlay": {"display": "none", "text": ""},
+      "switch_scan": {"before": 16, "after": 18, "current_scan": 2, "marker": 1, "recon_loads": 1},
+      "delta_positions": {"survivors": 9, "survivor_ratio": 1.0, "max_displacement": 164.242},
+      "type_histogram": {"": 11, "unresolved": 3, "tag": 2}
+    }
+  },
+  "tests": {
+    "npm_test": {"exit": 0, "tests": 98, "pass": 98, "fail": 0},
+    "client_test": {"exit": 0, "tests": 6, "pass": 6, "fail": 0}
+  },
+  "execution_log": [
+    {"task": "implement web/recon.js graph client", "status": "success", "validation": "npm test + client.test.js + CDP switch/delta proof"},
+    {"task": "wire stage 6 into .crush/plan.json", "status": "success", "validation": "plan present in repo state"}
+  ],
+  "summary": {
+    "files_created": 1,
+    "files_modified": 1,
+    "tests_run": 2,
+    "tests_passed": 104,
+    "known_limitations": ["endpoint/param -> attachment mapping not exercised by HTML-only fixture"]
+  },
+  "error_handling": {
+    "errors_encountered": 0,
+    "critical_errors": 0,
+    "non_critical_errors": 0,
+    "workarounds_used": []
+  },
+  "definition_of_done_verified": {
+    "tests_exist": true,
+    "tests_passing": true,
+    "implementation_matches_plan": true,
+    "no_todo_comments": true,
+    "all_file_changes_real": true
+  }
+}

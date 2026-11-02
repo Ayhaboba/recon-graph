@@ -1,0 +1,146 @@
+{
+  "stage": 0,
+  "verdict": "PASS",
+  "score": 88,
+  "checks": [
+    {
+      "id": "engine-verbatim",
+      "result": "pass",
+      "evidence": "sha256sum re-run by reviewer: all 5 pairs MATCH (graph-view 53f22b6a..., shims 8064f536..., sim 549be2f6..., pixi 842814b2..., graph.css 3ea9502e...); byte sizes also identical (49819 / 19916 / 17693 / 487134 / 5536). VENDOR.md:12-16 hashes equal verification.json:41-63. grep -rn setEmphasis web/vendor/ -> no matches."
+    },
+    {
+      "id": "reference-untouched",
+      "result": "pass",
+      "evidence": "git -C /home/erema/obsidian-graph status --porcelain -> 'fatal: not a git repository', so diff-level proof is impossible. stat mtimes of the 5 sources are 2026-11-01 22:54..2026-11-02 01:21, all older than stage-0 writes (02:35); reference index.html mtime 01:21. No evidence of post-stage-0 modification; caveat recorded in notes."
+    },
+    {
+      "id": "no-setEmphasis-yet",
+      "result": "pass",
+      "evidence": "grep -rn 'setEmphasis' /home/erema/recon-graph/web/vendor/ -> no matches. VENDOR.md:19 records it as pending stage 8; spec line 346 schedules it at stage 8. No engine edit is present."
+    },
+    {
+      "id": "no-react-no-deps",
+      "result": "pass",
+      "evidence": "package.json:1-12 has no dependencies/devDependencies keys. bin/server.js:11-14 requires only node:http, node:fs, node:fs/promises, node:path. web/index.html:50-53 loads classic scripts, no type=module; grep found no import/export or bundler config."
+    },
+    {
+      "id": "no-clean-room-refs",
+      "result": "pass",
+      "evidence": "grep -n 'GraphData|GraphSettings|src/clean' web/index.html -> no matches. grep -rn 'src/clean' web/vendor/ -> no matches. tests/stage0-smoke.js:293-294 also rejects both forbidden tokens."
+    },
+    {
+      "id": "worker-path",
+      "result": "pass",
+      "evidence": "web/index.html:143-148 constructs Renderer(..., new Worker('vendor/sim.js', {name:'Graph Worker'})) as the 4th argument. Vendored graph-view.js:311 confirms the 4th constructor parameter is the worker and that the fallback is a bare 'sim.js'; passing the explicit path avoids resolving /sim.js at the static root."
+    },
+    {
+      "id": "tl-collision-guard",
+      "result": "pass",
+      "evidence": "web/index.html:59-70 captures shimTl and installs the dual-signature guard (>=2 args -> PIXI spread helper, 1 arg -> shims display helper). This is the same logic as reference /home/erema/obsidian-graph/index.html:111-132. shims.js:439 defines the 1-arg Tl(e) that would otherwise collide."
+    },
+    {
+      "id": "demo-type-mapping",
+      "result": "pass",
+      "evidence": "web/index.html:89-113: 9 nodes / 10 links. Page nodes use type '' (/, /about, /admin, /login); endpoint /api/v1/users uses 'attachment'; param uses 'attachment'; artifact:flag:demo uses 'tag'; /missing uses 'unresolved'. Weights at 114-124 match degree (root 6, about 3, app.js 3, etc.). Runtime assertion at 160-166 checks 9/10."
+    },
+    {
+      "id": "server-mime-and-safety",
+      "result": "pass",
+      "evidence": "server.js:24 maps .js to text/javascript; 45-47 MIME lookup; 96-127 decodes and rejects any exact '..' segment (covers %2e%2e), NUL, and verifies path.relative containment; 174-178 returns 404 for non-files (no listing); 144-149 allows GET/HEAD only (405 otherwise); no write or upgrade handlers. Caveat: symlink targets are not resolved (medium issue m4)."
+    },
+    {
+      "id": "smoke-test-real",
+      "result": "pass",
+      "evidence": "tests/stage0-smoke.js:222-243 sha256-compares web/vendor files against the real /home/erema/obsidian-graph sources; 107-205 spawns 'node bin/server.js --port 0' and parses the actual bound port; 299-340 fetches HTTP responses and compares served bytes to hashes. Reviewer re-ran 'node tests/stage0-smoke.js' -> 9 pass / 0 fail / 0 skip, EXIT 0. Caveat: skip/PASS semantics at 48-55 and 233-235 (medium issue m3)."
+    },
+    {
+      "id": "no-scope-creep",
+      "result": "pass",
+      "evidence": "find shows only stage-0 artifacts; no lib/db.js, crawl.js, fuzz.js, stream.js, SQLite or WS protocol. bin/server.js has no 'upgrade' handler and no scanner; package.json has no dependencies. data/scans and data/bodies are empty scaffold directories."
+    },
+    {
+      "id": "vendor-md-complete",
+      "result": "pass",
+      "evidence": "VENDOR.md:3-7 states the verbatim policy, the single permitted setEmphasis edit, and the stage-9 panel.css fork deferral; 10-16 lists all 5 vendored files with source path, source sha256, vendored sha256 and byte size; 18-19 records the pending edit."
+    }
+  ],
+  "issues": {
+    "critical": [],
+    "high": [],
+    "medium": [
+      {
+        "id": "m1",
+        "file": "web/index.html",
+        "line": 168,
+        "description": "Status line reports 'worker wait' forever under the normal non-crossOriginIsolated serving path. The status reads R.workerResults (index.html:173), but graph-view.js render loop clears workerResults when the worker posts an ArrayBuffer ('if (s instanceof ArrayBuffer) n.workerResults = null;'), which is exactly the path sim.js takes without SharedArrayBuffer. Verification's browser.dom_status 'worker wait' is therefore expected even though drag proves the worker is alive. The status is not a reliable health signal."
+      },
+      {
+        "id": "m2",
+        "file": "web/index.html",
+        "line": 178,
+        "description": "Async renderer/worker failures are invisible. poll() only wraps the synchronous init() call (194-198); the vendored renderer defers initGraphics in a 50 ms setTimeout and retries once in another setTimeout (graph-view.js:319-326), and the worker has no 'error' handler (graph-view.js:313). If the second graphics init throws or vendor/sim.js fails to load, the page can keep showing 'ready · nodes 9 · links 10' over a blank canvas with the #error overlay still display:none."
+      },
+      {
+        "id": "m3",
+        "file": "tests/stage0-smoke.js",
+        "line": 48,
+        "description": "Test harness can record PASS for checks that did not actually assert success: check() records PASS for any non-throwing callback and only returns Boolean(detail && detail.ok) without using it (48-55). Separately, vendored-sha256-verbatim records SKIP for a missing source and still records the aggregate PASS (233-235), so if /home/erema/obsidian-graph is absent the smoke test can exit 0 with zero real byte comparisons. Current run has all sources, but the test is not hermetic."
+      },
+      {
+        "id": "m4",
+        "file": "bin/server.js",
+        "line": 118,
+        "description": "Static-root containment is lexical, not physical. resolveRequestPath uses path.resolve (118) and fsp.stat/readFile (160, 182), which follow symlinks; a symlink placed under web/ could serve a file outside STATIC_ROOT despite the '..' checks. No symlinks exist today, so it is not exploitable in the current tree, but the safety guarantee is weaker than the comments imply."
+      },
+      {
+        "id": "m5",
+        "file": "tests/stage0-smoke.js",
+        "line": 255,
+        "description": "No assertion that the Worker is actually the 4th Renderer argument. The regex only checks that 'new Worker(...vendor/sim.js...)' appears somewhere in index.html (255-257); a regression that constructs the Worker but passes undefined to Renderer would still pass the smoke test, even though the engine would then load bare 'sim.js' and break."
+      }
+    ],
+    "low": [
+      {
+        "id": "l1",
+        "file": "bin/server.js",
+        "line": 12,
+        "description": "Unused import: const fs = require('node:fs') is never referenced (only fsp is used). Dead code."
+      },
+      {
+        "id": "l2",
+        "file": "bin/server.js",
+        "line": 271,
+        "description": "shutdown(signal) accepts a signal but never uses it; SIGINT and SIGTERM take identical paths."
+      },
+      {
+        "id": "l3",
+        "file": "bin/server.js",
+        "line": 73,
+        "description": "-h is aliased to --host, so 'node bin/server.js -h' throws '--host requires a value' instead of printing help; only --help works. Minor CLI UX trap."
+      },
+      {
+        "id": "l4",
+        "file": "web/index.html",
+        "line": 114,
+        "description": "DEMO_WEIGHTS and DEMO_LINKS are hand-maintained and can drift from DEMO_NODES; only the final 9/10 counts are asserted at 160-166, not per-node degree or link-target integrity."
+      },
+      {
+        "id": "l5",
+        "file": "bin/server.js",
+        "line": 200,
+        "description": "Security headers (nosniff) are set only on 200 responses; 4xx/5xx text responses omit them. Low impact for a localhost static server."
+      }
+    ]
+  },
+  "recommendations": [
+    "Add worker.onerror and window 'error'/'unhandledrejection' listeners that call fatal(), and surface the first worker message as a real health flag instead of inferring health from R.workerResults.",
+    "Change the status text to distinguish 'worker ready' from 'worker ack received'; do not print 'worker wait' indefinitely for the ArrayBuffer transfer path.",
+    "Make tests/stage0-smoke.js fail when any original source file is missing (or require an explicit --allow-missing-source flag), and make check() honor an {ok:false} return value.",
+    "Resolve request paths with fs.realpath and re-check containment against STATIC_ROOT to close the symlink escape.",
+    "Add a smoke assertion that the new Worker(...) expression is the 4th argument of new Renderer(...), not merely present in the HTML.",
+    "Remove the unused node:fs import and unused shutdown(signal) parameter; decide whether -h should mean help or host and document it.",
+    "Consider recording reference-tree integrity with a checksum manifest or VCS, since /home/erema/obsidian-graph is not a git repository and the 'reference untouched' check cannot be diff-proven."
+  ],
+  "criterion_met": true,
+  "notes": "Stage 0 criterion is met on the evidence: server serves index.html, the demo graph booted (canvas present, 9 nodes / 10 links), drag was exercised with real CDP pointer events (fx_seen=true, dx=20.22 dy=29.65 vs control), and all five vendored copies are byte-identical to the originals. Reviewer independently re-ran the smoke test: 9/9 PASS, exit 0. Git Reality Validation: worker-1's 5 claimed hash pairs are real files and match; worker-2's claimed dataset and Worker path exist; worker-3's claimed server/test files exist and the test actually spawns the server. Caveat: /home/erema/obsidian-graph is not a git repo, so the 'reference untouched' check relies on mtimes plus matching hashes, not a diff. No critical or high issues; five medium robustness/test-integrity findings and five low cleanup findings are recorded. Score 88 >= pass_threshold 75 per the review rubric (task completion 30/30, code quality 24/30, error handling 16/20, consistency 9/10, documentation 9/10)."
+}

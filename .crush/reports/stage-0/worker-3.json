@@ -1,0 +1,41 @@
+{
+  "worker_id": "worker-3",
+  "stage": 0,
+  "status": "success",
+  "files_written": ["bin/server.js", "tests/stage0-smoke.js", "README.md"],
+  "commands": [
+    {
+      "cmd": "node --check bin/server.js",
+      "exit": 0,
+      "tail": "no output (syntax OK)"
+    },
+    {
+      "cmd": "node --check tests/stage0-smoke.js",
+      "exit": 0,
+      "tail": "no output (syntax OK)"
+    },
+    {
+      "cmd": "node tests/stage0-smoke.js",
+      "exit": 0,
+      "tail": "PASS vendored-files-exist; PASS vendored-sha256-verbatim; PASS demo-dataset-shape; PASS server-start; PASS index-html-script-order; PASS http-index; PASS http-vendor-assets; PASS traversal-blocked; PASS 404; SUMMARY pass=9 fail=0 skip=0 total=9"
+    },
+    {
+      "cmd": "node -e '<manual harness: spawn --port 0, HEAD, 404, dir, traversal, SIGTERM, default port, EADDRINUSE>'",
+      "exit": 0,
+      "tail": "START_LINE: [server] listening on http://127.0.0.1:41595/ ; HEAD_ROOT: 200 text/html; charset=utf-8 cl=5446 bodylen=0 ; HEAD_JS: 200 text/javascript; charset=utf-8 cache=no-store ; NOT_FOUND: 404 text/plain; charset=utf-8 \"not found: /nope\\n\" ; DIR_LISTING: 404 ; TRAV_RAW: 403 ; TRAV_ENC: 403 ; BAD_URI: 400 ; POST: 405 GET, HEAD ; SIGTERM_EXIT_CODE: 0 ; DEFAULT_LINE: [server] listening on http://127.0.0.1:8931/ ; EADDRINUSE_EXIT: 1 ; EADDRINUSE_MSG: [server] port 8931 is already in use (EADDRINUSE); try --port 0 or a different port"
+    },
+    {
+      "cmd": "sha256sum web/vendor/* vs obsidian-graph sources",
+      "exit": 0,
+      "tail": "all 5 pairs identical (graph-view.js 53f22b6a..., shims.js 8064f536..., sim.js 549be2f6..., pixi.min.js 842814b2..., graph.css 3ea9502e...)"
+    },
+    {
+      "cmd": "grep -n 'TODO\\|FIXME' bin/server.js tests/stage0-smoke.js README.md",
+      "exit": 1,
+      "tail": "NO_TODOS"
+    }
+  ],
+  "smoke": {"pass": 9, "fail": 0, "skip": 0},
+  "notes": "server.js exports createServer/parseArgs/resolveRequestPath/contentTypeFor/STATIC_ROOT for stage-5 extension; GET+HEAD only, 405 otherwise; traversal returns 403 (raw and percent-encoded), malformed URI 400, directories 404 (no listing); Cache-Control no-store + Content-Length on all responses. Smoke spawns `node bin/server.js --port 0`, parses actual bound port, uses global fetch for HTTP checks and node:http raw requests for traversal (fetch normalizes dot segments). Effects observed: SIGTERM -> exit 0, EADDRINUSE -> exit 1 with clear stderr.",
+  "blockers": []
+}

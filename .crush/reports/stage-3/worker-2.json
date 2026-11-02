@@ -1,0 +1,47 @@
+{
+  "worker_id": "worker-2",
+  "stage": 3,
+  "status": "completed-by-finisher",
+  "focus_area": "scanner_cli_and_queue",
+  "owned_files": ["bin/scanner.js", "lib/db.js (queue helpers only)"],
+  "completed_work": [
+    "Verified scan ids are the smallest free integer and the database path is <data-dir>/scans/<id>.sqlite using createScan with an explicit id.",
+    "Verified --resume <id> validates the scan file, requeues inflight rows, reuses the existing root queue row, and does not duplicate it.",
+    "Verified SIGINT triggers crawler stop, requeues inflight rows, writes status=stopped with pending>0 and inflight=0, and exits 130.",
+    "Verified --resume after SIGINT finishes the same scan: status=done, pending=0, inflight=0.",
+    "Verified queue helpers support pending -> inflight -> done|skip|err, claim transactions, queue counts, and inflight requeue."
+  ],
+  "commands": [
+    {
+      "cmd": "node --check bin/scanner.js && node --check lib/db.js",
+      "result": "ok"
+    },
+    {
+      "cmd": "node --test tests/crawl.test.js",
+      "result": "7/7 pass (includes SIGINT, resume, bad-input, dedupe cases)"
+    },
+    {
+      "cmd": "npm test",
+      "result": "79/79 pass"
+    }
+  ],
+  "probe_results": {
+    "scan_exit": 0,
+    "resume_exit": 0,
+    "resume_nodes": 18,
+    "resume_edges": 20,
+    "sigint_exit": 130,
+    "sigint_status": "stopped",
+    "sigint_pending": 5,
+    "sigint_inflight": 0,
+    "sigint_nodes": 8,
+    "sigint_resume_exit": 0,
+    "sigint_resume_status": "done",
+    "sigint_resume_pending": 0,
+    "sigint_resume_inflight": 0
+  },
+  "errors": [],
+  "notes": [
+    "The scanner already returned exit code 130 on SIGINT and used explicit scan ids; the finisher verified these paths rather than rewriting them."
+  ]
+}

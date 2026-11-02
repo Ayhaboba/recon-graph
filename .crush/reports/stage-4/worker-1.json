@@ -1,0 +1,76 @@
+{
+  "worker_id": "worker-1",
+  "stage": 4,
+  "status": "completed",
+  "focus_area": "dictionary_fuzzer",
+  "owned_files": ["lib/fuzz.js", ".crush/plan.json"],
+  "completed_work": [
+    "Created lib/fuzz.js exporting parseWordlist, probeSoft404 and createFuzzer.",
+    "parseWordlist trims lines, drops blank lines and '#' comments, dedupes and keeps first-seen order.",
+    "probeSoft404 fingerprints one random path (__recon_probe_<hex>__) and returns {sha256,size,status} or null on failure.",
+    "createFuzzer builds dir + encodeURI(word) for every directory x word pair and skips the whole run when the product exceeds maxPaths.",
+    "Hit statuses 200/204/301/302/307/401/403: soft-404 responses (sha256 match or relative size delta <= soft404Tolerance) increment softSkips and create no node.",
+    "Miss statuses 404/410 create no node; other statuses are ignored without counting an error.",
+    "Each finding upserts a node with origin='fuzz', attrs.fuzz=true, status, depth=parent depth+1, type page/asset/endpoint, and adds a 'fuzzed' edge from the directory node.",
+    "Requests are rate-limited by a concurrency-capped worker pool with a global delay between request starts; per-URL failures never throw and increment errors.",
+    "Local node:http/node:https GET used because lib/crawl.js exports only createCrawler; 10s default timeout, UA recon-graph/1.0, 1 MiB body cap, no redirect following.",
+    "Wrote .crush/plan.json with the fixed stage-4 worker split."
+  ],
+  "commands": [
+    {
+      "cmd": "node --check lib/fuzz.js",
+      "result": "ok"
+    },
+    {
+      "cmd": "node -e \"const f=require('./lib/fuzz.js'); console.log(typeof f.parseWordlist, typeof f.probeSoft404, typeof f.createFuzzer); console.log(f.parseWordlist('# c\\nadmin\\n\\nbackup.zip\\nadmin\\n'))\"",
+      "result": "function function function; [ 'admin', 'backup.zip' ]"
+    },
+    {
+      "cmd": "npm test",
+      "result": "79/79 pass"
+    },
+    {
+      "cmd": "fixture probe: node tests/site/server.js --port 0 + .probe-tmp/probe.js (wordlist admin, backup.zip, api/v1/, nonexistent; delay=0, concurrency=2)",
+      "result": "tested=4 hits=3 softSkips=1 errors=0; nodes: /admin(page,200,depth1), /api/v1(page,200,depth1), /backup.zip(asset,200,depth1); 3 fuzzed edges from root; .probe-tmp deleted"
+    }
+  ],
+  "probe_results": {
+    "base_url": "http://127.0.0.1:34749/",
+    "wordlist": ["admin", "backup.zip", "api/v1/", "nonexistent"],
+    "tested": 4,
+    "hits": 3,
+    "soft_skips": 1,
+    "errors": 0,
+    "soft_404_detected_for": "/nonexistent",
+    "nodes": [
+      {"key": "GET http://127.0.0.1:34749/admin", "type": "page", "status": 200, "depth": 1, "origin": "fuzz", "attrs": {"fuzz": true}},
+      {"key": "GET http://127.0.0.1:34749/api/v1", "type": "page", "status": 200, "depth": 1, "origin": "fuzz", "attrs": {"fuzz": true}},
+      {"key": "GET http://127.0.0.1:34749/backup.zip", "type": "asset", "status": 200, "depth": 1, "origin": "fuzz", "attrs": {"fuzz": true}}
+    ],
+    "edges": [
+      {"kind": "fuzzed", "src": 1, "dst": 2},
+      {"kind": "fuzzed", "src": 1, "dst": 3},
+      {"kind": "fuzzed", "src": 1, "dst": 4}
+    ]
+  },
+  "criterion_checks": {
+    "admin_found": true,
+    "backup_zip_found": true,
+    "api_v1_found": true,
+    "nonexistent_not_a_finding": true,
+    "soft_404_not_a_finding": true
+  },
+  "definition_of_done_verified": {
+    "implementation_matches_plan": true,
+    "no_todo_comments": true,
+    "all_file_changes_real": true,
+    "existing_tests_passing": true,
+    "fixture_probe_passing": true
+  },
+  "errors": [],
+  "notes": [
+    "lib/crawl.js exposes no public request helper (Object.keys === ['createCrawler']), so lib/fuzz.js carries its own minimal GET as specified.",
+    "Soft-404 comparison only applies when the reference probe itself returned a hit status, so a server with a genuine 404 for unknown paths cannot cause false skips.",
+    "createFuzzer returns {run}; run never throws and always resolves to {tested,hits,softSkips,errors}."
+  ]
+}

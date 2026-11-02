@@ -1,0 +1,118 @@
+{
+  "worker_id": "worker-1",
+  "stage": "8-part-1",
+  "timestamp": "2026-11-02T13:55:21Z",
+  "focus_area": "engine_setEmphasis",
+  "scope_owned": [
+    "web/vendor/graph-view.js",
+    "VENDOR.md"
+  ],
+  "files_created": [
+    ".crush/reports/stage-8/worker-1.json"
+  ],
+  "files_modified": [
+    "web/vendor/graph-view.js",
+    "VENDOR.md"
+  ],
+  "files_deleted": [
+    ".probe-tmp.js (throwaway functional probe)"
+  ],
+  "engine_edit": {
+    "approved_spec": "§6.2 setEmphasis, §9 row 8",
+    "mode": "verbatim + setEmphasis (approved edit)",
+    "original_sha256": "53f22b6a827f7bdd503efdefd1b06ea03a5d2298d733a4d94624aa113315b51f",
+    "original_bytes": 49819,
+    "patched_sha256": "6d2662d3e3da104282a2389689d278bc97c60565b00bf912eef348f175f0f108",
+    "patched_bytes": 51067,
+    "line_count_before": 846,
+    "line_count_after": 878,
+    "render_loop_hook": {
+      "location": "Node.prototype.render (kZ.prototype.render)",
+      "line": 159,
+      "anchor_original_line": 158,
+      "code": "if (t._emphasisIds) t._emphasisIds[this.id] ? (u = t.colors.fillHighlight, m = u.a) : (m *= .25, y *= .25);",
+      "mechanism": "existing PIXI per-node tint/alpha (colors.fillHighlight + renderer alpha), no new shaders or passes",
+      "single_branch": true
+    },
+    "appended_tail": {
+      "lines": "848-878",
+      "functions": [
+        "Renderer.prototype.setEmphasis",
+        "Renderer.prototype.clearEmphasis"
+      ],
+      "implementation": "IIFE resolves Renderer from window.__obsidianGraph; stores string-keyed id map in this._emphasisIds; no new globals; ids are dataset key strings so no numeric-id set needed",
+      "guards": "setEmphasis(null) and setEmphasis([]) both delegate to clearEmphasis()"
+    },
+    "additivity_proof": {
+      "method": "sed '159d;848,$d' web/vendor/graph-view.js | sha256sum",
+      "stripped_sha256": "53f22b6a827f7bdd503efdefd1b06ea03a5d2298d733a4d94624aa113315b51f",
+      "stripped_bytes": 49819,
+      "result": "byte-identical to original after removing hook line and appended tail; diff shows additions only (158a159, 846a848,878), no changed/deleted original lines",
+      "prefix_identical": true
+    }
+  },
+  "syntax_check": {
+    "command": "node --check web/vendor/graph-view.js",
+    "passed": true
+  },
+  "symbol_check": {
+    "command": "node -e ... includes('Renderer.prototype.setEmphasis') / includes('Renderer.prototype.clearEmphasis')",
+    "has_setEmphasis": true,
+    "has_clearEmphasis": true
+  },
+  "hash_check": {
+    "command": "sha256sum web/vendor/graph-view.js /home/erema/obsidian-graph/src/graph-view.js",
+    "patched": "6d2662d3e3da104282a2389689d278bc97c60565b00bf912eef348f175f0f108",
+    "source": "53f22b6a827f7bdd503efdefd1b06ea03a5d2298d733a4d94624aa113315b51f",
+    "expected_divergence": true,
+    "source_untouched": true
+  },
+  "functional_check": {
+    "method": "headless chromium over CDP (throwaway .probe-tmp.js, deleted after run); local static server, real page /index.html, synthetic 3-node setData, 600 ms of real requestAnimationFrame render frames",
+    "setEmphasis_called_with": [
+      "[firstKey]",
+      "null",
+      "[]",
+      "new Set(['probe-b'])",
+      "['probe-a','probe-c'] after clearEmphasis()"
+    ],
+    "threw": null,
+    "emphasis_ids_after_set": [
+      "probe-a",
+      "probe-c"
+    ],
+    "clearEmphasis_result": null,
+    "window_errors_during_frames": [],
+    "render_frames_ok": true,
+    "passed": true
+  },
+  "vendor_md": {
+    "updated": true,
+    "row": "original source sha256 + original vendored sha256/bytes retained; patched sha256/bytes added; mode: verbatim + setEmphasis (approved edit)",
+    "pending_edits_replaced_by_applied_edits": true,
+    "applied_entry_fields": [
+      "spec §6.2",
+      "date 2026-11-02",
+      "Renderer.prototype.setEmphasis",
+      "companion clearEmphasis",
+      "render-loop hook line 159",
+      "original hash",
+      "patched hash",
+      "justification"
+    ],
+    "policy_kept": "only permitted edit; future edits need a new entry"
+  },
+  "definition_of_done_verified": {
+    "engine_edit_additive": true,
+    "original_bytes_untouched_except_approved_hook_and_tail": true,
+    "syntax_valid": true,
+    "symbols_present": true,
+    "functional_probe_passed": true,
+    "vendor_bookkeeping_complete": true,
+    "no_probe_artifacts_left": true
+  },
+  "known_issues": [],
+  "recommendations": [
+    "Stage 8 part 2 search UI should call renderer.setEmphasis(keys) on query change and renderer.clearEmphasis() on clear; the hook skips all work when _emphasisIds is null."
+  ]
+}

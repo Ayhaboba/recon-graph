@@ -1,0 +1,43 @@
+{
+  "worker_id": "worker-1",
+  "stage": 2,
+  "status": "success",
+  "files_written": [
+    "lib/norm.js",
+    "tests/norm.test.js",
+    ".crush/plan.json"
+  ],
+  "node_test": {
+    "tests": 14,
+    "pass": 14,
+    "fail": 0,
+    "raw_tail": "1..14\n# tests 14\n# suites 0\n# pass 14\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 65.394451"
+  },
+  "criterion": {
+    "key_pair_equal": true
+  },
+  "commands": [
+    {
+      "cmd": "node --check lib/norm.js",
+      "exit": 0,
+      "tail": "CHECK_OK"
+    },
+    {
+      "cmd": "node --test tests/norm.test.js",
+      "exit": 0,
+      "tail": "1..14\n# tests 14\n# suites 0\n# pass 14\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 65.394451"
+    },
+    {
+      "cmd": "node -e \"key('//host/a?b=2&a=1') === key('https://host/a?a=1&b=2')\"",
+      "exit": 0,
+      "tail": "{\"a\":\"GET https://host/a?a=1&b=2\",\"b\":\"GET https://host/a?a=1&b=2\",\"equal\":true,\"expected\":\"GET https://host/a?a=1&b=2\"}"
+    },
+    {
+      "cmd": "npm test",
+      "exit": 0,
+      "tail": "1..53\n# tests 53\n# suites 0\n# pass 53\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 167.705004"
+    }
+  ],
+  "notes": "Hand-rolled parser, zero deps, no new URL(). Covers spec §4.1: ascii-only host lowercasing, https default for protocol-relative, default ports dropped, index.html collapse, dot segments, // collapse, trailing slash except root, query sort by name then value with duplicates, empty ? dropped, fragment stripped, percent hex uppercased without decoding, null for non-http(s)/empty/unparsable. paramKey names-only sorted, sameOrigin/originOf/hostOf default-port aware. An earlier npm test run during parallel work showed 2 failures in tests/extract.test.js (worker-2); a later identical run after their edits passed 53/53. No files outside my ownership touched.",
+  "blockers": []
+}

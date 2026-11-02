@@ -1,0 +1,112 @@
+{
+  "worker_id": "worker-2",
+  "stage": 9,
+  "part": 2,
+  "focus_area": "shell_wiring_and_vendor_record",
+  "timestamp": "2026-11-02T19:28:00Z",
+  "owned_files": ["web/index.html", "VENDOR.md"],
+  "forbidden_files_untouched": ["web/panel.js", "web/panel.css", "web/recon.js", "lib/**", "tests/**"],
+  "tasks_completed": 2,
+  "tasks_failed": 0,
+  "can_continue": true,
+  "execution_log": [
+    {
+      "task_id": "s9-w2-001",
+      "task_type": "edit-file",
+      "file_path": "web/index.html",
+      "status": "success",
+      "result": "Added <link rel=\"stylesheet\" href=\"panel.css\"> at line 9 (immediately after app.css, line 8). Verified order adjacency.",
+      "self_validation": {
+        "checked": true,
+        "method": "pattern_match + line adjacency",
+        "passed": true,
+        "details": "app.css 8 -> panel.css 9 = adjacent"
+      }
+    },
+    {
+      "task_id": "s9-w2-002",
+      "task_type": "edit-file",
+      "file_path": "web/index.html",
+      "status": "success",
+      "result": "Added <script src=\"panel.js\"></script> at line 59 (immediately after search.js, line 58). Last script on page; vendor script order untouched.",
+      "self_validation": {
+        "checked": true,
+        "method": "pattern_match + line adjacency",
+        "passed": true,
+        "details": "search.js 58 -> panel.js 59 = adjacent"
+      }
+    },
+    {
+      "task_id": "s9-w2-003",
+      "task_type": "edit-file",
+      "file_path": "VENDOR.md",
+      "status": "success",
+      "result": "Inserted new '## Forks' section before '## Applied edits' with the two-row fork table (panel.css, panel.js) plus two clarifying notes.",
+      "self_validation": {
+        "checked": true,
+        "method": "grep verification",
+        "passed": true,
+        "details": "grep -n \"panel.css\\|panel.js\" VENDOR.md -> lines 23, 24, 27 (table rows + note)"
+      }
+    }
+  ],
+  "source_hashes": {
+    "/home/erema/obsidian-graph/src/clean/panel.css": "9c8b0f9aa90dd16095e455dd5112bedb9ba6a62357262dbdde2cadea30b5e087",
+    "note": "recorded verbatim from sha256sum in VENDOR.md Forks table; panel.js has no standalone source file (page-level GraphSettings code inside obsidian-graph/index.html)"
+  },
+  "engine_integrity_verification": {
+    "note": "engine files not modified by worker-2; hashes re-read and confirmed matching VENDOR.md records",
+    "web/vendor/graph-view.js": "6d2662d3e3da104282a2389689d278bc97c60565b00bf912eef348f175f0f108 (patched, setEmphasis append from stage 8)",
+    "web/vendor/shims.js": "8064f536183d6122c6febde2a63d1d7beebdeaf0cf8b4356b42c2ab58fa746dc (verbatim)",
+    "web/vendor/sim.js": "549be2f69710af360d521c92b80c83718f673594d3dc2255a65e251199eee25d (verbatim)",
+    "web/vendor/pixi.min.js": "842814b22c348dcdab381ffb79da3763ff0672271f60f09dababa52656fd31b8 (verbatim)",
+    "web/vendor/graph.css": "3ea9502e219d2a396cfba69a92073b80a9264f194517b7f6ed5be516a48f62d3 (verbatim)",
+    "all_match_vendor_md": true
+  },
+  "preserved_invariants": {
+    "Tl_guard_intact": true,
+    "vendor_script_order_intact": true,
+    "existing_ids_unchanged": true,
+    "setEmphasis_absent_from_page": true,
+    "panel_css_before_panel_js_only_via_css_link": true
+  },
+  "verify_output": {
+    "command": "node -e \"const s=require('fs').readFileSync('web/index.html','utf8'); ['panel.css','panel.js'].forEach(k=>{if(s.indexOf(k)<0) throw new Error('missing '+k)}); if(s.indexOf('setEmphasis')>=0) throw new Error('engine text leaked into page'); console.log('OK shell9');\"",
+    "stdout": "OK shell9",
+    "exit_code": 0
+  },
+  "observed_state": {
+    "web/panel.css_exists_at_constraint_check": false,
+    "web/panel.js_exists_at_constraint_check": false,
+    "meaning": "worker-1 creates both files in parallel; shell references are wired ahead of arrival, which is expected for this split. Missing files on disk do not affect the index.html verification.",
+    "followup_for_orchestrator": "confirm worker-1 delivered web/panel.css and web/panel.js before final integration check"
+  },
+  "summary": {
+    "files_modified": 2,
+    "files_created": 1,
+    "files_deleted": 0,
+    "commands_run": 4,
+    "tests_run": 1,
+    "tests_passed": 1
+  },
+  "error_handling": {
+    "errors_encountered": 0,
+    "critical_errors": 0,
+    "non_critical_errors": 0,
+    "workarounds_used": []
+  },
+  "definition_of_done_verified": {
+    "link_tag_added_after_app_css": true,
+    "script_tag_added_after_search_js": true,
+    "Tl_guard_and_vendor_order_unchanged": true,
+    "vendor_md_forks_section_added": true,
+    "real_source_sha256_recorded": true,
+    "panel_js_reimplementation_stated": true,
+    "engine_untouched_except_documented_setEmphasis": true,
+    "forbidden_files_not_touched": true
+  },
+  "recommendations": [
+    "After worker-1 lands panel.js/panel.css, run a browser smoke test to confirm no 404s on the new shell tags.",
+    "VENDOR.md line 7 still reads 'it is imported and forked at stage 9' — accurate, and now points at the detailed Forks table."
+  ]
+}

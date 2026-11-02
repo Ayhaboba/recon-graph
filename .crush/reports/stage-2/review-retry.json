@@ -1,0 +1,199 @@
+{
+  "stage": 2,
+  "retry": 1,
+  "reviewer": "worker-agent (read-only stand-in)",
+  "verdict": "RETRY",
+  "score": 72,
+  "previous_issues": [
+    {
+      "id": "HIGH-secret-assign-unquoted",
+      "status": "fixed",
+      "evidence": "lib/rules.js:22 now has quoted (>=3) and bare (>=4) alternatives; probes: password=hunter2, DB_PASSWORD=hunter2, password: hunter2 all return one secret-assign finding; user_password=\"x\", passwordField=\"x\", tokenizer return []. The originally reported high issue is fixed in its stated forms."
+    },
+    {
+      "id": "MED-srcset-naive-split",
+      "status": "fixed",
+      "evidence": "lib/extract.js:175-203 implements candidate tokenisation; probe '<img srcset=\"https://cdn.test/a,b.png 1x, //cdn.test/c 2x\">' -> exactly [https://cdn.test/a,b.png, http://cdn.test/c]; data:image/png;base64,AAA 1x, /ok.png 2x -> [http://site.test/ok.png]; no /b.png and no /AAA bogus links."
+    },
+    {
+      "id": "MED-base-ordering",
+      "status": "fixed",
+      "evidence": "lib/extract.js:293-338 firstBaseHref + :348-359 pre-pass; probe '<a href=\"before\"><base href=\"/sub/\"><a href=\"after\"><base href=\"/other/\">' -> [http://site.test/sub/before, http://site.test/sub/after], no /other/. The originally reported document-wide/first-wins defect is fixed."
+    },
+    {
+      "id": "MED-js-regex-and-escapes",
+      "status": "fixed",
+      "evidence": "lib/extract.js:638-669 regex skip and :671-751 scanner; probes: 'var re = /<a href=\"([^\"]+)\"/g; var api = \"/api/v1/users\";' -> only /api/v1/users; \\u002f and \\x2f paths decode to /api/v1/users and /api/v1/admin; '\"/api\\n/x\"' produces no link and no /apin/x."
+    },
+    {
+      "id": "MED-stacktrace-frames",
+      "status": "fixed",
+      "evidence": "lib/rules.js:24-42; probes: 'at com.acme.http.Router.dispatch(Router.java:42)' and 'File \"/app/server.py\", line 17, in handle' each return one stacktrace finding; Node frames and headers still match."
+    },
+    {
+      "id": "MED-userinfo-in-keys",
+      "status": "fixed",
+      "evidence": "lib/norm.js:63-110 splitAuthority discards userinfo; probes: normalizeUrl('https://u:p@h.test/x')='https://h.test/x', key='GET https://h.test/x', originOf='https://h.test', hostOf='h.test', paramKey='param:https://h.test/x?a&b'; IPv6 and base-scheme resolution remain correct."
+    },
+    {
+      "id": "LOW-unicode-host-trailing-dot",
+      "status": "fixed",
+      "evidence": "lib/norm.js:102-107 uses toLowerCase and strips exactly one trailing dot; probes: HÖST.test == höst.test, host. == host, host.. -> host.; IPv6 bracketed host untouched."
+    },
+    {
+      "id": "TEST-INTEGRITY",
+      "status": "fixed",
+      "evidence": "tests/extract.test.js:17-51 throws on missing fixtures (verified on a copy: endpointless fixture set -> 16 tests, 16 fail, 0 skipped); :53-67 asserts exact 5 HTML + 3 JS files; :237-259 asserts the exact 6-URL endpoints.js set including /api/v3; no t.skip in tests."
+    }
+  ],
+  "checks": [
+    {
+      "id": "npm-test",
+      "result": "pass",
+      "evidence": "node --check on all three libs exits 0; npm test: 65 tests, 65 pass, 0 fail, 0 skipped."
+    },
+    {
+      "id": "criterion-key-pair",
+      "result": "pass",
+      "evidence": "key('//host/a?b=2&a=1') === key('https://host/a?a=1&b=2') === 'GET https://host/a?a=1&b=2'; tests/norm.test.js:22-29."
+    },
+    {
+      "id": "fixtures-counts",
+      "result": "pass",
+      "evidence": "5 HTML + 3 JS fixtures; links: basic 13, nested 6, attrs 5, css 4, flag 1; endpoints 6, bundle 1, secrets 0; tests/extract.test.js:69-258 and direct probe."
+    },
+    {
+      "id": "rules-list-current",
+      "result": "pass",
+      "evidence": "secrets.js -> ['flag','ctf','aws-key','secret-assign','secret-assign','secret-assign','todo'] (7, 3 secret-assign); bundle.js -> ['private-key','todo','stacktrace','stacktrace','stacktrace']; flag.html -> all seven rule kinds exactly once; tests/rules.test.js:66-136."
+    },
+    {
+      "id": "secret-unquoted-positives",
+      "result": "pass",
+      "evidence": "scan('password=hunter2'), scan('DB_PASSWORD=hunter2'), scan('password: hunter2'), scan('password=\"hunter2\"') each yield exactly one secret-assign high finding."
+    },
+    {
+      "id": "secret-negative-probes",
+      "result": "pass",
+      "evidence": "scan('user_password=\"x\"'), scan('passwordField=\"x\"'), scan('tokenizer'), scan('max_tokens: 4096'), scan('secretCount=3'), scan('api_key_id=abc') all return []."
+    },
+    {
+      "id": "secret-json-quoted-key",
+      "result": "fail",
+      "evidence": "lib/rules.js:22 requires [: =] immediately after the name, so the JSON key's closing quote blocks the match. Probes: scan('{\"token\": \"abcdef\"}') -> []; scan('{\"password\": \"hunter2\"}') -> []; scan('{\"api_key\": \"abcd\"}') -> []; while unquoted token: \"abcdef\" matches. Prompt states JSON should match."
+    },
+    {
+      "id": "srcset-edge-cases",
+      "result": "pass",
+      "evidence": "1x/100w descriptors, trailing comma, leading comma, multiple spaces, bare URL, comma-containing URLs and data: URIs all behave; lib/extract.js:175-203; tests/extract.test.js:193-208."
+    },
+    {
+      "id": "base-document-wide-first-wins",
+      "result": "pass",
+      "evidence": "First <base href> applies before and after links; second base ignored; empty href falls back to document URL; absent base resolves relative links against optsBase; lib/extract.js:293-359."
+    },
+    {
+      "id": "base-unquoted-trailing-slash",
+      "result": "fail",
+      "evidence": "lib/extract.js:332 (and :398) strips the final slash of an unquoted value as if it were a self-closing marker. Probe '<base href=/sub/><a href=after>' with baseUrl http://site.test/dir/page.html -> out.base='http://site.test/sub', link 'http://site.test/after'; expected /sub/after. Quoted '/sub/' and unquoted '/sub/ ' work."
+    },
+    {
+      "id": "js-division-basic",
+      "result": "pass",
+      "evidence": "extractJs('10 / 2 / 5; \"/api/v1/users\"') and '10 /= 2; ...' and 'a /= 2; ...' keep /api/v1/users; regex literal containing \\/ is skipped correctly."
+    },
+    {
+      "id": "js-postfix-division-regression",
+      "result": "fail",
+      "evidence": "lib/extract.js:678,699-705,729,742-746 treats each + or - as an operand-start. Probe 'var a=1; var b=a++ / 2; var api=\"/api/v1/real\";' -> []; same for a--; 'var of=1; of / 2; ...' -> []; 'x.return / 2; ...' -> []. Links after valid postfix division are lost."
+    },
+    {
+      "id": "js-regex-statement-position",
+      "result": "fail",
+      "evidence": "A valid regex literal in statement position after if/while/for still leaks its body because the closing ) sets expectOperand=false. Probe 'if (x) /\"\\/api\\/v1\\/fake\"/.test(y); var api=\"/api/v1/real\";' -> [http://site.test/api/v1/fake, http://site.test/api/v1/real]; only /real should remain."
+    },
+    {
+      "id": "js-escapes",
+      "result": "pass",
+      "evidence": "\\u002f, \\x2f and \\u{...} decode to paths; \\n, \\u000a and \\x0a are control-rejected so no /apin/x; line continuation and \\/ handled; lib/extract.js:529-634."
+    },
+    {
+      "id": "stacktraces",
+      "result": "pass",
+      "evidence": "Java frame-only, Python File/line frame-only, header+frame grouping, Node :line:col and 'Exception in thread' all detected; lib/rules.js:24-42; tests/rules.test.js:158-175."
+    },
+    {
+      "id": "userinfo-canonicalisation",
+      "result": "pass",
+      "evidence": "normalizeUrl/key/originOf/hostOf/paramKey are credential-free; URLs without userinfo unchanged; IPv6 [::1]:8080 and default-port handling intact; base-scheme resolution with userinfo base works; lib/norm.js:63-110,396."
+    },
+    {
+      "id": "unicode-trailing-dot",
+      "result": "pass",
+      "evidence": "HÖST.test and höst.test collapse; host. and host collapse; host.. -> host.; path case preserved; lib/norm.js:102-107; tests/norm.test.js:199-222."
+    },
+    {
+      "id": "missing-fixture-fails",
+      "result": "pass",
+      "evidence": "On a copy with tests/fixtures/js/endpoints.js removed, node --test tests/extract.test.js reports 16 tests, 16 fail, 0 skipped, hookFailed with 'missing fixture(s) after retry'. No t.skip."
+    },
+    {
+      "id": "fixture-set-and-exact-endpoints",
+      "result": "pass",
+      "evidence": "tests/extract.test.js:53-67 asserts exactly 5 HTML + 3 JS; :237-259 deepEquals the exact 6-URL endpoints set including /api/v3 and asserts bundle.js exactly one URL."
+    },
+    {
+      "id": "no-tautological-assertions",
+      "result": "pass",
+      "evidence": "Scanned all norm/extract/rules tests; every assert checks a computed value or exact set; no assert.ok(true)/assert.equal(true,true); no skip/todo."
+    },
+    {
+      "id": "performance-no-redos",
+      "result": "pass",
+      "evidence": "Linear scaling: secret-prefix 32k chars 0.5 ms; 8k traceback frames 2.2 ms; 400k anchors 1.1 s; 400k postfix-JS lines 138 ms; 4 MB scan 6.6 ms. No catastrophic backtracking observed."
+    },
+    {
+      "id": "verification-artifact-current",
+      "result": "fail",
+      "evidence": ".crush/reports/stage-2/verification.json still records 53 tests and pre-repair secrets/bundle rule lists; the current suite is 65 and verification-retry.json (created after repair) records 65. Stale evidence, not a source defect."
+    }
+  ],
+  "issues": {
+    "critical": [],
+    "high": [
+      "lib/rules.js:22 — secret-assign does not match quoted JSON/JS keys. The pattern requires the separator immediately after the name, so '{\"token\": \"abcdef\"}', '{\"password\": \"hunter2\"}' and '{\"api_key\": \"abcd\"}' all return []; unquoted token: \"abcdef\" does match. The prompt explicitly requires JSON to match. Add an optional closing quote before :/= (name[\"']?\\s*[:=]) and a regression test; otherwise the most common serialized config form is missed by stage 3."
+    ],
+    "medium": [
+      "lib/extract.js:332 (also :398) — <base href=/sub/> is valid unquoted HTML, but the trailing slash is treated as a self-closing marker and stripped: out.base='http://site.test/sub', relative 'after' -> 'http://site.test/after' instead of 'http://site.test/sub/after'. Quoted '/sub/' and unquoted '/sub/ ' work. Only strip a trailing slash when it is separated from the attribute value.",
+      "lib/extract.js:678,699-705,729,742-746 — the regex/division state machine still misclassifies valid JavaScript. 'var b = a++ / 2; var api=\"/api/v1/real\";' and a-- variants return [] (link lost); 'of / 2' and 'x.return / 2' likewise; and a regex literal in statement position after if/while/for leaks regex-body strings: 'if (x) /\"\\/api\\/v1\\/fake\"/.test(y); var api=\"/api/v1/real\";' yields both /api/v1/fake and /api/v1/real. Track previous token type/statement position and add these cases."
+    ],
+    "low": [
+      "lib/extract.js:270-287 — query-only <base href=\"?v=1\"> is treated as a directory: out.base='http://site.test/dir/page.html/?v=1' and link 'after' -> 'http://site.test/dir/page.html/after' instead of /dir/after. Query-only base should keep the document's file-like path for resolution.",
+      "lib/extract.js:293-328 — firstBaseHref only skips comments, script and style; <base> inside <title>, <textarea> or <template> is treated as a real document base. Probe '<title><base href=\"/x/\"></title><a href=\"after\">' -> base /x/ and link /x/after; markup in RCDATA/template content is inert.",
+      "tests/rules.test.js:138-156 and tests/extract.test.js:193-235 — new tests cover the repaired cases but not JSON quoted-key secrets, max_tokens/secretCount/api_key_id false positives, unquoted <base href=/sub/>, or postfix division. The worker reports probe these, but the suite does not lock them in.",
+      ".crush/reports/stage-2/verification.json — stale artifact (53 tests, old findings lists) while the current suite is 65 and verification-retry.json is current. Refresh or replace it so stage evidence is unambiguous."
+    ]
+  },
+  "file_sha256": {
+    "lib/norm.js": "cce5cef84aff1149765bd7b1d016dbb390e4a18843757fd045fd6039863f5ff0",
+    "lib/extract.js": "8c93783cf3f81cf82c6949ab1f72136600526bf22b2a210ccbc89a6aef90fe68",
+    "lib/rules.js": "ce3b1f268f7c83d61dee44fbbd80150b1dae7851a36e31d9cf3ea47ec1196502",
+    "tests/norm.test.js": "2fb41e6786e48ddb6c2d216efaf524af499aaeaab89a840e72346135eaeb248b",
+    "tests/extract.test.js": "cebd21c1ce30767e884e5900e0b0d8124ab7f1b3f3793650e13adc1ec275b3cb",
+    "tests/rules.test.js": "cbc4094dd7d90ea6cfb0f35cf6d8cf11ef581bb8c600f3c25ad0844031e01cd5",
+    "tests/fixtures/html/attrs.html": "05a64550bd2e5ef50562b548ea8fe3bda1dd1c6991f233bea21665d612d05d63",
+    "tests/fixtures/html/basic.html": "9afefd7e947cafe20aaff260dd67132661cb438c2c95abe835227b6f0c7d043a",
+    "tests/fixtures/html/css.html": "9cdf26223eaffe5d23e58642923cc0cda530421eefb33346e2252b43d749da03",
+    "tests/fixtures/html/flag.html": "904dd0756b4f45fd470d2e9af1a65d5a74e508db7c638dea8e3e86075991a1d9",
+    "tests/fixtures/html/nested.html": "127a88a63396425411892ce3fc41942754e56b04e28fe981ca6c22427a33c080",
+    "tests/fixtures/js/bundle.js": "da595d44a94ef31be0ddef83249487b6963a52f60df7da59284f9184246b019c",
+    "tests/fixtures/js/endpoints.js": "bf00dd08f0fcc08c15400b223427cf372c90da05ee75b5a291ddbec17a8dd9fe",
+    "tests/fixtures/js/secrets.js": "594f2b11e69deaec28de3242c53e2982dd0875751be53e47d7027676aa458d92",
+    ".crush/reports/stage-2/worker-1-retry.json": "b6e330b94921b823c2a4cebb0efedfca68580712348fae2e791126d47078fcb4",
+    ".crush/reports/stage-2/worker-2-retry.json": "c0e17fdfed4427fc2a14dafc6754e2959e025c5cff8a91d8d038acfd8387af54",
+    ".crush/reports/stage-2/worker-3-retry.json": "74308212c7373ceb49fee94d14ce88b4c4e4b54710a655091907d806b835de09",
+    ".crush/reports/stage-2/verification-retry.json": "7b541a66508501f809661814222cc6b4c7e174fc1ed481e88c202ba354996679"
+  },
+  "criterion_met": true,
+  "notes": "All previously reported defects are fixed in their stated forms: unquoted secrets, srcset commas/data URIs, document-wide first-wins <base>, JS regex-literal assignment/escapes, Java/Python frame-only stack traces, userinfo stripping, Unicode/trailing-dot host canonicalisation, and test integrity (missing fixtures fail; exact 5+3 fixture set; exact endpoints set; no skips). Stage-2 criterion itself is met: 65/65 tests pass, key pair collapses, and fixture link counts are 13/6/5/4/1. RETRY is driven by one new high (JSON quoted-key secrets not detected), two new mediums (unquoted <base href=/sub/> loses the directory slash; JS scanner postfix/statement-position regex handling loses or invents links), plus low-resolution edge cases and a stale verification.json. No critical issues; no source files were modified during this review."
+}

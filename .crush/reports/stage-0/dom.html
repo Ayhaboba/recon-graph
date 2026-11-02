@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recon Graph</title>
+<link rel="stylesheet" href="vendor/graph.css">
+<style>
+  html, body {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+  }
+  #graph {
+    position: fixed;
+    inset: 0;
+  }
+  #status {
+    position: fixed;
+    left: 12px;
+    bottom: 12px;
+    z-index: 10000;
+    font: 11px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    color: var(--text-muted, #9a9a9a);
+    background: rgba(28, 28, 28, .8);
+    padding: 4px 8px;
+    border-radius: 4px;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  #error {
+    position: fixed;
+    inset: 0;
+    z-index: 10001;
+    background: rgba(40, 0, 0, .92);
+    color: #ffb4b4;
+    font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    padding: 24px;
+    white-space: pre-wrap;
+    overflow: auto;
+  }
+</style>
+</head>
+<body>
+
+<div class="graph-view" id="graph" style="padding: 0px; overflow: hidden; position: relative;"><canvas width="780" height="590" style="position: absolute; left: 0px; top: 0px; margin: 0px; padding: 0px; border: 0px; width: 100%; height: 100%; overflow: hidden; touch-action: none;"></canvas><canvas width="780" height="590" style="margin: 0px; padding: 0px; border: 0px; width: 780px; height: 590px; overflow: hidden;"></canvas></div>
+<div id="status">ready · nodes 9 · links 10 · worker wait</div>
+<div id="error" style="display:none"></div>
+
+<script src="vendor/pixi.min.js"></script>
+<script src="vendor/shims.js"></script>
+<script src="vendor/graph-view.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* PIXI 7.2.4 UMD leaks global `Tl`; shims.js defines a different `Tl`.
+   * Both must work: 2+ args = PIXI spread helper, 1 arg = shims display helper. */
+  var shimTl = window.Tl;
+  window.Tl = function (target, key, value) {
+    if (arguments.length >= 2) {
+      if (key in target) {
+        Object.defineProperty(target, key, { enumerable: true, configurable: true, writable: true, value: value });
+      } else {
+        target[key] = value;
+      }
+      return target;
+    }
+    return shimTl(target);
+  };
+
+  function byId(id) {
+    return document.getElementById(id);
+  }
+
+  function showFatal(err) {
+    console.error("[graph] init failed", err);
+    var box = byId("error");
+    if (box) {
+      box.textContent = "[graph] init failed\n\n" + (err && err.stack ? err.stack : String(err));
+      box.style.display = "block";
+    }
+    var statusEl = byId("status");
+    if (statusEl) {
+      statusEl.textContent = "fatal · see overlay";
+    }
+  }
+
+  var DEMO_NODES = {
+    "GET http://demo.local/": { type: "", links: {
+      "GET http://demo.local/about": true,
+      "GET http://demo.local/api/v1/users": true,
+      "GET http://demo.local/app.js": true,
+      "GET http://demo.local/missing": true,
+      "artifact:flag:demo": true
+    } },
+    "GET http://demo.local/about": { type: "", links: {
+      "GET http://demo.local/": true,
+      "GET http://demo.local/admin": true
+    } },
+    "GET http://demo.local/admin": { type: "", links: {
+      "GET http://demo.local/login": true
+    } },
+    "GET http://demo.local/login": { type: "", links: {} },
+    "GET http://demo.local/api/v1/users": { type: "attachment", links: {} },
+    "GET http://demo.local/app.js": { type: "", links: {
+      "GET http://demo.local/api/v1/users": true,
+      "param:GET http://demo.local/api/v1/users?id": true
+    } },
+    "GET http://demo.local/missing": { type: "unresolved", links: {} },
+    "artifact:flag:demo": { type: "tag", links: {} },
+    "param:GET http://demo.local/api/v1/users?id": { type: "attachment", links: {} }
+  };
+  var DEMO_WEIGHTS = {
+    "GET http://demo.local/": 6,
+    "GET http://demo.local/about": 3,
+    "GET http://demo.local/admin": 2,
+    "GET http://demo.local/login": 1,
+    "GET http://demo.local/api/v1/users": 2,
+    "GET http://demo.local/app.js": 3,
+    "GET http://demo.local/missing": 1,
+    "artifact:flag:demo": 1,
+    "param:GET http://demo.local/api/v1/users?id": 1
+  };
+  var DEMO_LINKS = 10;
+
+  var started = false;
+  var startedAt = Date.now();
+  var fatalShown = false;
+
+  function fatal(err) {
+    if (fatalShown) return;
+    fatalShown = true;
+    showFatal(err);
+  }
+
+  function init() {
+    if (started) return;
+    started = true;
+
+    window.__obsidianHost = true;
+
+    var R = new window.__obsidianGraph.Renderer(
+      document.getElementById("graph"),
+      false,
+      false,
+      new Worker("vendor/sim.js", { name: "Graph Worker" })
+    );
+    window.__graph = R;
+
+    R.setData({ nodes: DEMO_NODES, numLinks: DEMO_LINKS, weights: DEMO_WEIGHTS });
+
+    window.__graphReady = { nodes: R.nodes.length, links: R.links.length };
+
+    var statusEl = byId("status");
+    if (statusEl) {
+      statusEl.textContent = "ready · nodes " + R.nodes.length + " · links " + R.links.length;
+    }
+
+    if (R.nodes.length !== 9 || R.links.length !== 10) {
+      fatal(new Error(
+        "dataset mismatch: expected 9 nodes / 10 links, got " +
+        R.nodes.length + " / " + R.links.length
+      ));
+      return;
+    }
+
+    setInterval(function () {
+      var el = byId("status");
+      if (el) {
+        el.textContent = "ready · nodes " + R.nodes.length +
+          " · links " + R.links.length +
+          " · worker " + (R.workerResults ? "ok" : "wait");
+      }
+    }, 1000);
+  }
+
+  function poll() {
+    if (window.PIXI && window.__obsidianGraph) {
+      try {
+        init();
+      } catch (err) {
+        fatal(err);
+      }
+      return;
+    }
+    if (Date.now() - startedAt > 5000) {
+      fatal(new Error("timed out waiting for window.PIXI and window.__obsidianGraph"));
+      return;
+    }
+    setTimeout(poll, 50);
+  }
+
+  try {
+    poll();
+  } catch (err) {
+    fatal(err);
+  }
+})();
+</script>
+
+
+
+</body></html>

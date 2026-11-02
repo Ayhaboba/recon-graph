@@ -1,0 +1,36 @@
+{
+  "stage": 6,
+  "npm_test": {"exit": 0, "tests": 98, "pass": 98, "fail": 0},
+  "client_test": {"exit": 0, "tests": 6, "pass": 6, "fail": 0},
+  "criterion": {
+    "two_scans": true,
+    "no_reload": true,
+    "marker": 1,
+    "before": 16,
+    "after": 18,
+    "current_scan": 2,
+    "delta_positions": {"survivors": 9, "survivor_ratio": 1.0, "max_displacement": 164.242}
+  },
+  "type_mapping_browser": {
+    "": 11,
+    "unresolved": 3,
+    "tag": 2,
+    "attachment": 0,
+    "note": "endpoint/param -> attachment is code-verified only (TYPE_MAP in web/recon.js); fixture has no non-HTML endpoint, so browser histogram exercises only page->'', unresolved->unresolved, artifact->tag."
+  },
+  "status_changed": true,
+  "error_overlay_hidden": true,
+  "raw": [
+    {"cmd": "node --check web/recon.js", "output": "exit 0"},
+    {"cmd": "npm test", "output": "# tests 98 | # pass 98 | # fail 0 | duration_ms 31136.5"},
+    {"cmd": "node --test tests/client.test.js", "output": "# tests 6 | # pass 6 | # fail 0; ok 1..6 (boot, switchScan no reload, delta positions, type mapping, status, error overlay)"},
+    {"cmd": "fixture+scans", "output": "fixture listening 127.0.0.1:45301; scan1=1 (16 nodes), scan2=2 (18 nodes)"},
+    {"cmd": "switch", "output": "{\"before\":16,\"scan0\":1,\"after\":18,\"scan\":2,\"marker\":1,\"loads\":1}"},
+    {"cmd": "type histogram", "output": "{\"\":11,\"unresolved\":3,\"tag\":2}; total=16; /admin,/api/v1* samples all type \"\""},
+    {"cmd": "status samples (2s apart)", "output": "first=\"nodes 8 · edges 7 · pending 0\" second=\"nodes 9 · edges 9 · pending 0\" changed=true"},
+    {"cmd": "delta", "output": "lastMessage().t=\"delta\"; ids 9->11; survivors=9; survivor_ratio=1.0; max_displacement=164.242px (<200)"},
+    {"cmd": "error overlay", "output": "display=\"none\", text=\"\""},
+    {"cmd": "cleanup", "output": "all child processes killed; .v6-* scratch removed"}
+  ],
+  "failures": []
+}

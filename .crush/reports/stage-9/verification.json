@@ -1,0 +1,25 @@
+{
+  "stage": 9,
+  "npm_test": { "exit": 0, "tests": 117, "pass": 117, "fail": 0 },
+  "criterion": {
+    "asset_toggle": { "before": 22, "after": 17, "restored": 5 },
+    "status_4xx_only": true,
+    "origin_filter": { "backup_zip_present": true, "removed": true },
+    "display": true,
+    "forces": true,
+    "groups_persist": true
+  },
+  "raw": [
+    "# [panel] assets before=22 after=17 assets=5",
+    "# [panel] object id overlap after restore persistent=100.0% full=77.3%",
+    "# [panel] status all before=22 clientErr-only=0 (0 is valid)",
+    "# [panel] origin before=22 crawl-only=19 fuzzKeys=3",
+    "# [panel] render nodeSize 1 -> 2.5",
+    "# [panel] forces repel 3375 -> reset 1000",
+    "# [panel] group colour persisted asset=\\#123456",
+    "# tests 117",
+    "# pass 117",
+    "# fail 0"
+  ],
+  "failures": []
+}

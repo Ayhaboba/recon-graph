@@ -1,0 +1,138 @@
+{
+  "worker_id": "worker-2",
+  "stage": 6,
+  "timestamp": "2026-11-02T00:26:00Z",
+  "status": "completed",
+  "focus_area": "client_shell",
+  "focus_claim": {
+    "claimed_at": "2026-11-02T00:19:40Z",
+    "collision_detected": false,
+    "retry_attempts": 0
+  },
+  "assigned_tasks": 2,
+  "tasks_completed": 2,
+  "tasks_failed": 0,
+  "can_continue": true,
+  "red_green_refactor_completed": false,
+  "red_green_refactor_note": "No tests owned by this worker; tests/** is explicitly out of scope. Verification used the mandated static shell assertion check plus a headless-Chromium render of the served page.",
+  "execution_log": [
+    {
+      "task_id": "shell-001",
+      "task_type": "create-file",
+      "file_path": "web/index.html",
+      "description": "Rewrite stage-0 demo page as the stage-6 client shell: top bar (scan select, inert search, status), full-bleed graph stage, empty 320px panel, hidden error overlay, Tl collision guard, classic scripts only.",
+      "status": "success",
+      "result": "Page rewritten (1537 bytes). Structure: header#topbar with label+select#scan-select+input#search+div#status; main#stage > div.graph-view#graph; aside#panel; div#error[style=display:none]. Stylesheets vendor/graph.css then app.css. Scripts pixi.min.js -> shims.js -> graph-view.js -> inline Tl guard -> recon.js. No demo dataset, no GraphData/GraphSettings, no src/clean/*.",
+      "error": null,
+      "timestamp": "2026-11-02T00:21:00Z",
+      "self_validation": {
+        "checked": true,
+        "method": "static_assertion_script + headless_dom",
+        "passed": true
+      }
+    },
+    {
+      "task_id": "shell-002",
+      "task_type": "create-file",
+      "file_path": "web/app.css",
+      "description": "New shell stylesheet: 44px top bar + 1fr graph + 320px right column grid, Obsidian palette vars reused from vendor/graph.css, monospace truncated status, scrollable panel, full-screen error overlay, panel collapse below 900px.",
+      "status": "success",
+      "result": "app.css created (4470 bytes). Uses --background-primary/--background-secondary/--text-normal/--text-muted/--text-faint/--interactive-accent/--color-base-30/--color-base-40 and --background-modifier-border fallback #333. #graph forced to position:absolute inset:0 to override vendor .graph-view{position:fixed;inset:0}, keeping the canvas inside the stage cell. No external fonts or images.",
+      "error": null,
+      "timestamp": "2026-11-02T00:22:00Z",
+      "self_validation": {
+        "checked": true,
+        "method": "static_assertion_script + headless_dom",
+        "passed": true
+      }
+    },
+    {
+      "task_id": "shell-003",
+      "task_type": "bash-command",
+      "command": "node -e <stage-6 shell assertion check from the task spec>",
+      "description": "Mandated static verification of web/index.html.",
+      "status": "success",
+      "result": "OK shell",
+      "error": null,
+      "timestamp": "2026-11-02T00:22:30Z",
+      "self_validation": {
+        "checked": true,
+        "method": "command_exit_code",
+        "passed": true
+      }
+    },
+    {
+      "task_id": "shell-004",
+      "task_type": "bash-command",
+      "command": "node bin/server.js --port 0 && chromium --headless=new --dump-dom http://127.0.0.1:<port>/",
+      "description": "Browser smoke of the served shell. web/recon.js was absent during the whole retry window (6 x 20 s), so the app script could not be exercised.",
+      "status": "success",
+      "result": "First pass ran without recon.js (status \"starting…\", error hidden, panel empty, zero uncaught JS errors). After worker-1 delivered web/recon.js, re-ran the same check on http://127.0.0.1:35919/: #status = \"nodes 0 · edges 0 · pending 0\" (HAS_NODES=true), #error still style=\"display:none\" with empty body, #panel present and empty, scan select empty (no scans in data/scans), zero uncaught JS errors.",
+      "error": null,
+      "timestamp": "2026-11-02T00:28:30Z",
+      "self_validation": {
+        "checked": true,
+        "method": "browser_dump_dom",
+        "passed": true
+      }
+    }
+  ],
+  "browser": {
+    "status": "ok",
+    "note": "First attempt was blocked by absent web/recon.js (6 x 20 s retries); worker-1 delivered the file afterwards and the check was re-run successfully.",
+    "shell_render": "ok",
+    "chromium": "Chromium 153.0.8010.52 (headless=new, --no-sandbox, --enable-unsafe-swiftshader)",
+    "server_url": "http://127.0.0.1:35919/",
+    "assertions": {
+      "error_hidden": true,
+      "error_body_empty": true,
+      "panel_present": true,
+      "panel_empty": true,
+      "status_has_nodes": true,
+      "uncaught_console_errors": 0
+    },
+    "dom_excerpt": "<header id=\"topbar\">\n  <label class=\"lbl\" for=\"scan-select\">scan</label>\n  <select id=\"scan-select\"></select>\n  <input id=\"search\" type=\"search\" placeholder=\"search nodes… (stage 8)\" autocomplete=\"off\" spellcheck=\"false\">\n  <div id=\"status\">nodes 0 · edges 0 · pending 0</div>\n</header>\n---\n<div id=\"error\" style=\"display:none\">\nstatus:nodes 0 · edges 0 · pending 0"
+  },
+  "summary": {
+    "files_created": 1,
+    "files_modified": 1,
+    "files_deleted": 0,
+    "commands_run": 3,
+    "tests_run": 1,
+    "tests_passed": 1,
+    "total_time": "~8 min"
+  },
+  "error_handling": {
+    "errors_encountered": 1,
+    "critical_errors": 0,
+    "non_critical_errors": 0,
+    "workarounds_used": [
+      "While recon.js was pending, verified the shell DOM alone (error hidden, empty panel, zero uncaught JS errors); after the file landed, re-ran the full browser check instead of reporting a pass early."
+    ]
+  },
+  "self_validation_summary": {
+    "total_validations": 4,
+    "passed": 4,
+    "failed": 0,
+    "validation_methods": [
+      "static_assertion_script",
+      "command_exit_code",
+      "browser_dump_dom"
+    ]
+  },
+  "known_issues": [
+    "Stage-0 smoke assertions in tests/stage0-smoke.js still expect the removed demo page (DEMO_NODES, worker on vendor/sim.js) and will fail against the new shell. This is by design of the stage-6 rewrite; tests/** is outside this worker's ownership and must be updated by the stage-6 test owner."
+  ],
+  "recommendations": [
+    "recon.js should set window.__obsidianHost = true before constructing __obsidianGraph.Renderer, create Worker('vendor/sim.js'), and write 'nodes N · edges M · pending K' into #status.",
+    "Populate #scan-select from /api/scans; keep #search enabled but inert until stage 8.",
+    "Panel already scrolls and is hidden below 900px; stage 7 can mount inspector content directly into #panel without shell changes."
+  ],
+  "definition_of_done_verified": {
+    "tests_exist": false,
+    "tests_passing": false,
+    "implementation_matches_plan": true,
+    "no_todo_comments": true,
+    "all_file_changes_real": true
+  }
+}

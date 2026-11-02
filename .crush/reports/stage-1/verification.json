@@ -1,0 +1,111 @@
+{
+  "stage": 1,
+  "syntax_ok": true,
+  "self_test": {
+    "exit": 0,
+    "pass": 12,
+    "fail": 0,
+    "raw": "PASS tmpdir: /tmp/recon-db-lYpdjz/scan.sqlite\nPASS schema: scans,nodes,edges,bodies,fts_docs,findings,queue,node_fts\nPASS scan: id=1 status=running\nPASS nodes=3: A=1 B=2 C=3\nPASS edges=2: count=2 duplicate=ignored\nPASS degree: degree A=1 B=2 C=1 (shared node B = 2)\nPASS fts: hits=1 snippet=\"<html>[delta]-flag-marker ALPHA</html>\"\nPASS upsert-idempotent: id=1 rev 11->12\nPASS rev: maxNodeRev=12 maxEdgeRev=2\nPASS delta: nodes=3 edges=2 cursor=12 then 0/0\nPASS edge-delete-degree: degree A=0 B=1\nPASS cleanup: closed + tmpdir removed\nSUMMARY pass=12 fail=0\nSELFTEST_EXIT=0"
+  },
+  "node_test": {
+    "exit": 0,
+    "tests": 10,
+    "pass": 10,
+    "fail": 0,
+    "raw": "TAP version 13\n# (node:1280042) ExperimentalWarning: SQLite is an experimental feature and might change at any time\n# (Use `node --trace-warnings ...` to show where the warning was created)\n# Subtest: schema objects exist\nok 1 - schema objects exist\n# Subtest: migrations are idempotent\nok 2 - migrations are idempotent\n# Subtest: upsertNode inserts once and dedups by key\nok 3 - upsertNode inserts once and dedups by key\n# Subtest: degree maintained by triggers\nok 4 - degree maintained by triggers\n# Subtest: edge unique constraint\nok 5 - edge unique constraint\n# Subtest: fts finds body text\nok 6 - fts finds body text\n# Subtest: fts no LIMIT by default\nok 7 - fts no LIMIT by default\n# Subtest: fts body truncation at 2 MiB\nok 8 - fts body truncation at 2 MiB\n# Subtest: delta by rev\nok 9 - delta by rev\n# Subtest: stats counts\nok 10 - stats counts\n1..10\n# tests 10\n# suites 0\n# pass 10\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 145.399758\nNODETEST_FILE_EXIT=0"
+  },
+  "criterion": {
+    "scan_created": true,
+    "nodes_3": true,
+    "edges_2": true,
+    "fts_finds_word": true,
+    "degree_shared_node_2": true,
+    "degree_full": "A=1 B=2 C=1",
+    "duplicate_key_no_new_node": true
+  },
+  "schema": {
+    "tables": [
+      "bodies",
+      "edges",
+      "findings",
+      "fts_docs",
+      "node_fts",
+      "node_fts_config",
+      "node_fts_data",
+      "node_fts_docsize",
+      "node_fts_idx",
+      "nodes",
+      "queue",
+      "scans"
+    ],
+    "triggers": [
+      "edges_degree_delete",
+      "edges_degree_insert",
+      "edges_rev_insert",
+      "fts_docs_ad",
+      "fts_docs_ai",
+      "fts_docs_au",
+      "nodes_rev_insert",
+      "nodes_rev_update"
+    ],
+    "indexes": [
+      "bodies_sha",
+      "edges_scan_dst",
+      "edges_scan_rev",
+      "edges_scan_src",
+      "findings_scan_rule",
+      "nodes_scan_rev",
+      "nodes_scan_status",
+      "nodes_scan_type",
+      "queue_state"
+    ],
+    "user_version": 1
+  },
+  "reopen": {
+    "user_version_unchanged": true,
+    "data_intact": true,
+    "migrations_idempotent": true,
+    "journal_mode": "wal"
+  },
+  "raw_commands": [
+    {
+      "cmd": "node --check lib/db.js && echo OK_db; node --check lib/migrate.js && echo OK_migrate; node --check tests/db.test.js && echo OK_test",
+      "exit": 0,
+      "output": "OK_db\nOK_migrate\nOK_test"
+    },
+    {
+      "cmd": "node lib/db.js --self-test; echo \"SELFTEST_EXIT=$?\"",
+      "exit": 0,
+      "output": "PASS tmpdir: /tmp/recon-db-lYpdjz/scan.sqlite\nPASS schema: scans,nodes,edges,bodies,fts_docs,findings,queue,node_fts\nPASS scan: id=1 status=running\nPASS nodes=3: A=1 B=2 C=3\nPASS edges=2: count=2 duplicate=ignored\nPASS degree: degree A=1 B=2 C=1 (shared node B = 2)\nPASS fts: hits=1 snippet=\"<html>[delta]-flag-marker ALPHA</html>\"\nPASS upsert-idempotent: id=1 rev 11->12\nPASS rev: maxNodeRev=12 maxEdgeRev=2\nPASS delta: nodes=3 edges=2 cursor=12 then 0/0\nPASS edge-delete-degree: degree A=0 B=1\nPASS cleanup: closed + tmpdir removed\nSUMMARY pass=12 fail=0\nSELFTEST_EXIT=0"
+    },
+    {
+      "cmd": "node --test tests/; echo \"NODETEST_EXIT=$?\"",
+      "exit": 1,
+      "output": "TAP version 13\n# node:internal/modules/cjs/loader:1433\n#   throw err;\n#   ^\n# Error: Cannot find module '/home/erema/recon-graph/tests'\n#     at Function._resolveFilename (node:internal/modules/cjs/loader:1430:15)\n#     at defaultResolveImpl (node:internal/modules/cjs/loader:1040:19)\n#     at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1045:28)\n#     at Function._load (node:internal/modules/cjs/loader:1216:37)\n#     at wrapModuleLoad (node:internal/modules/cjs/loader:253:24)\n#     at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\n#     at node:internal/main/run_main_module:36:49 {\n#   code: 'MODULE_NOT_FOUND',\n#   requireStack: []\n# }\n# Node.js v22.23.3\n# Subtest: tests\nnot ok 1 - tests\n  ---\n  duration_ms: 46.490898\n  type: 'test'\n  location: '/home/erema/recon-graph/tests:1:1'\n  failureType: 'testCodeFailure'\n  exitCode: 1\n  signal: ~\n  error: 'test failed'\n  code: 'ERR_TEST_FAILURE'\n  ...\n1..1\n# tests 1\n# suites 0\n# pass 0\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 60.365248\nNODETEST_EXIT=1"
+    },
+    {
+      "cmd": "node --test tests/db.test.js; echo \"NODETEST_FILE_EXIT=$?\"",
+      "exit": 0,
+      "output": "TAP version 13\n# (node:1280042) ExperimentalWarning: SQLite is an experimental feature and might change at any time\n# (Use `node --trace-warnings ...` to show where the warning was created)\n# Subtest: schema objects exist\nok 1 - schema objects exist\n# Subtest: migrations are idempotent\nok 2 - migrations are idempotent\n# Subtest: upsertNode inserts once and dedups by key\nok 3 - upsertNode inserts once and dedups by key\n# Subtest: degree maintained by triggers\nok 4 - degree maintained by triggers\n# Subtest: edge unique constraint\nok 5 - edge unique constraint\n# Subtest: fts finds body text\nok 6 - fts finds body text\n# Subtest: fts no LIMIT by default\nok 7 - fts no LIMIT by default\n# Subtest: fts body truncation at 2 MiB\nok 8 - fts body truncation at 2 MiB\n# Subtest: delta by rev\nok 9 - delta by rev\n# Subtest: stats counts\nok 10 - stats counts\n1..10\n# tests 10\n# suites 0\n# pass 10\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 145.399758\nNODETEST_FILE_EXIT=0"
+    },
+    {
+      "cmd": "node /tmp/stage1-criterion.js; echo \"CRITERION_EXIT=$?\"",
+      "exit": 0,
+      "output": "{\n  \"ok\": true,\n  \"results\": {\n    \"scan_created\": true,\n    \"nodes_3\": true,\n    \"edges_2\": true,\n    \"fts_finds_word\": true,\n    \"degree_shared_node_2\": true,\n    \"degree_full\": \"A=1 B=2 C=1\",\n    \"duplicate_key_no_new_node\": true,\n    \"duplicate_key_rev_bumped\": true,\n    \"dup_rev_before\": 4,\n    \"dup_rev_after\": 8,\n    \"journal_mode\": \"wal\",\n    \"wal_file\": true,\n    \"shm_file\": true,\n    \"user_version\": 1,\n    \"user_version_unchanged\": true,\n    \"data_intact\": true,\n    \"migrations_idempotent\": true,\n    \"second_apply\": {\n      \"from\": 1,\n      \"to\": 1,\n      \"applied\": []\n    }\n  },\n  \"inventory\": {\n    \"tables\": [\"bodies\", \"edges\", \"findings\", \"fts_docs\", \"node_fts\", \"node_fts_config\", \"node_fts_data\", \"node_fts_docsize\", \"node_fts_idx\", \"nodes\", \"queue\", \"scans\"],\n    \"triggers\": [\"edges_degree_delete\", \"edges_degree_insert\", \"edges_rev_insert\", \"fts_docs_ad\", \"fts_docs_ai\", \"fts_docs_au\", \"nodes_rev_insert\", \"nodes_rev_update\"],\n    \"indexes\": [\"bodies_sha\", \"edges_scan_dst\", \"edges_scan_rev\", \"edges_scan_src\", \"findings_scan_rule\", \"nodes_scan_rev\", \"nodes_scan_status\", \"nodes_scan_type\", \"queue_state\"]\n  }\n}\nCRITERION nodes=3 edges=2 fts_hits=1 degree_B=2 dup_id_same=true\nCRITERION_EXIT=0\n(node:1283054) ExperimentalWarning: SQLite is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)"
+    }
+  ],
+  "failures": [
+    {
+      "check": "node_test_dir_invocation",
+      "cmd": "node --test tests/",
+      "exit": 1,
+      "output": "Error: Cannot find module '/home/erema/recon-graph/tests' — Node v22.23.3 treats the directory positional as a module path. Invoking the test file directly (`node --test tests/db.test.js`) passes 10/10. No project source change made.",
+      "blocking": false
+    }
+  ],
+  "notes": [
+    "putBody requires sha256 and file_path NOT NULL per schema (lib/migrate.js bodies table); criterion payload supplied both.",
+    "Node emitted ExperimentalWarning for node:sqlite on every run; no functional impact.",
+    "Throwaway /tmp/stage1-criterion.js deleted after run."
+  ]
+}

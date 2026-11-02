@@ -1,0 +1,33 @@
+{
+  "worker_id": "worker-2",
+  "stage": 2,
+  "retry": 1,
+  "status": "success",
+  "files_written": [
+    "lib/extract.js",
+    "tests/extract.test.js"
+  ],
+  "node_test": {
+    "extract": {
+      "command": "node --test tests/extract.test.js",
+      "tests": 16,
+      "pass": 16,
+      "fail": 0,
+      "skipped": 0
+    },
+    "suite": {
+      "command": "npm test",
+      "tests": 65,
+      "pass": 65,
+      "fail": 0,
+      "skipped": 0
+    }
+  },
+  "commands": [
+    "node --check lib/extract.js",
+    "node --test tests/extract.test.js",
+    "npm test"
+  ],
+  "notes": "srcset now uses the HTML candidate algorithm (URL run of non-whitespace; commas inside URLs/data URIs survive; optional descriptors skipped to the next comma; trailing-comma URLs handled). <base> resolved in a first pass: first base element with href applies document-wide, including links before it; later <base> ignored. JS scanner tracks expectOperand to distinguish regex literals from division, skips // and /* */ comments and regex bodies honouring escapes and [classes], decodes \\uXXXX/\\u{...}/\\xXX/\\n/\\r/\\t/\\b/\\f/\\v/\\0/\\\\/quotes and line continuations, and rejects literals containing control characters. form[action=\"\"] resolves to the document URL; video[poster] keeps attr \"poster\". Test integrity: 3x5s fixture retry then throw (no skip, no 200s sleeps), fixture-set test asserts exactly 5 HTML + 3 JS files, endpoints test asserts the exact 6-URL set including /api/v3, and new tests cover srcset commas/data URIs, base first-wins/before-base links, regex-literal anchors, \\u002f/\\x2f decoding, escape-newline rejection, form action=\"\" and poster attr. Existing HTML fixture expected counts unchanged (basic 13, nested 6, attrs 5, css 4, flag 1). lib/norm.js, lib/rules.js and tests/fixtures/js untouched.",
+  "blockers": []
+}

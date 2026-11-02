@@ -1,0 +1,56 @@
+{
+  "stage": 5,
+  "verdict": "PASS",
+  "score": 83,
+  "checks": [
+    {
+      "id": "1-protocol",
+      "result": "pass",
+      "evidence": "stream.js:399-411 gates hello on proto===1 ({t:'error',code:'proto'} + close 1002); scans/open/page/close handled; search/node/action answer {t:'error',code:'not-implemented',of}(125-136,431-441); nodeWire keys exactly id,key,type,label,status,degree,depth (41-51); edgeWire [src,dst,kind]; progress stats exactly pending/inflight/done/err/nodes/edges (510-517); SNAPSHOT_LIMIT=5000 (20); server passes pollMs 250 (bin/server.js:321). Live probe frames match shapes."
+    },
+    {
+      "id": "2-delta",
+      "result": "pass",
+      "evidence": "db.delta WHERE rev > after, selects nodes+edges in one deferred transaction (db.js:666-710); cursor advanced per client before send (stream.js:478), empty deltas suppressed (479); degree-only update reaches client: nodes_rev_update fires from edges_degree_insert (verified rev 3→4 on edge insert; probe delta shows node degree 7→8); one send per client per tick. Deviation: db.delta executed per subscriber, not once per scan (459-468) — perf only, no loss/dup."
+    },
+    {
+      "id": "3-paging",
+      "result": "pass",
+      "evidence": "clampLimit 1..5000, defaults 5000 (stream.js:29-34); clampAfter >=0 (36-39); nodes WHERE scan_id=? AND id>? ORDER BY id LIMIT ? (80-84); edges WHERE src IN (same page ids) (85-95); tail page after=999999 returns nodes 0 edges 0 in live probe, so iteration terminates; cursor read before rows inside same snapshot (75-97)."
+    },
+    {
+      "id": "4-readonly",
+      "result": "pass",
+      "evidence": "both DB opens use db.openReadOnly (stream.js:168,240); grep over stream.js+server.js finds no upsert*/withTransaction/PRAGMA/INSERT/UPDATE/DELETE; missing file -> existsSync false -> {t:'error',code:'no-scan'} (235-236,308-312); openReadOnly refuses nonexistent path and never migrates (db.js:189-219); bin/server.js only serves web/ and /api/scans (no DB writes); readonly test asserts size+mtime unchanged."
+    },
+    {
+      "id": "5-resources",
+      "result": "pass",
+      "evidence": "ws close/error both dropClient (stream.js:553-562); dropClient unsubscribes (283-287); last subscriber schedules 30s idle close then closeScanState closes handle (201-223,273-279); close() clearInterval(timer), closes clients, all scan states, wss (573-605); hub keeps one record per client and no own message queue. Caveats: ws.send has no bufferedAmount cap; readPage error path in handleOpen skips scheduleIdleClose (314-323,376)."
+    },
+    {
+      "id": "6-tests",
+      "result": "fail",
+      "evidence": "two-tab test opens two sockets before scanner starts and scanner runs live with delay 250 (tests/stream.test.js:471-533) — live requirement met. Progress not enforced: delta test passes via deltasWithNodes>0 OR progress increase (456-462); two-tab wait passes via lastNodes===finalCount OR ids.size===finalCount and can assert null===null (516-526). Suite would stay green with zero progress frames, so progress assertion cannot fail."
+    }
+  ],
+  "issues": {
+    "critical": [],
+    "high": [],
+    "medium": [
+      "delta polling runs db.delta once per subscriber per 250 ms tick (stream.js:459-468), not one shared read per scan; cost scales with client count (no correctness impact).",
+      "page replies reuse snapshot type and carry scan-wide maxRev cursor with no hasMore marker (stream.js:79,368-374); stage-6 recon.js that adopts frame.cursor.rev on page frames can skip updates/edges between page and delta cursors (probe: initial snapshot rev 0, page rev 94). Initial page is also capped at 5000 with no more flag.",
+      "tests do not require any live delta frame or progress change: delta test ORs delta-with-nodes against progress growth (tests/stream.test.js:456-462); two-tab test can pass with equal partial id sets plus lastNodes===finalCount / null===null (516-526)."
+    ],
+    "low": [
+      "hello is not required before scans/open/page/action; proto is validated only when hello arrives (stream.js:399-411).",
+      "open.rev is ignored; handleOpen always snapshots from after=0 (stream.js:301-336).",
+      "readPage failure in handleOpen/handlePage returns after send(error) without scheduleIdleClose, leaking the opened scan state/handle until hub.close (stream.js:314-323,351-365).",
+      "no backpressure handling: ws.send without bufferedAmount cap; a slow client's buffer can grow unbounded (stream.js:138-148).",
+      "close with mismatched/missing scanId is a silent no-op, leaving the current subscription active (stream.js:425-429).",
+      "pagination test uses snapshot.nodes.length as `after` (tests/stream.test.js:415), valid only while ids are contiguous from 1.",
+      "new subscriber receives no progress until the scan-wide stats signature changes (lastStatsJson shared per scan; stream.js:518-520)."
+    ]
+  },
+  "criterion_met": true
+}

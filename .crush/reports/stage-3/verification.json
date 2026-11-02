@@ -1,0 +1,63 @@
+{
+  "stage": 3,
+  "npm_test": { "exit": 0, "tests": 79, "pass": 79, "fail": 0 },
+  "crawl_test": { "exit": 0, "tests": 7, "pass": 7, "fail": 0 },
+  "criterion": {
+    "depth3": true,
+    "max_depth_fetched": 3,
+    "nodes": 18,
+    "edges": 20,
+    "types": { "artifact": 2, "asset": 2, "page": 10, "unresolved": 4 },
+    "root_degree": 9,
+    "dedupe": true,
+    "sigint": { "status": "stopped", "inflight": 0, "pending": 5, "exit": 130 },
+    "resume": { "status": "done", "pending": 0, "nodes_before": 8, "nodes_after": 18 }
+  },
+  "robots": { "default_secret_status": null, "ignore_secret_status": 200 },
+  "redirects": { "301": true, "302": true, "edges": 1 },
+  "bodies": { "rows": 12, "files_exist": true },
+  "findings": { "rows": 2, "artifact_nodes": 2 },
+  "failures": [],
+  "raw": [
+    {
+      "cmd": "sqlite3 .verify-data/scans/1.sqlite \"select 'nodes',count(*) from nodes; select 'edges',count(*) from edges; select type,count(*) from nodes group by type;\"",
+      "output": "nodes|18\nedges|20\nartifact|2\nasset|2\npage|10\nunresolved|4"
+    },
+    {
+      "cmd": "sqlite3 .verify-data/scans/1.sqlite \"select 'max_depth_fetched',max(depth) from nodes where status is not null; select 'root',key,degree,depth from nodes where depth=0; select 'dupe_keys',count(*) from (select key from nodes group by key having count(*)>1);\"",
+      "output": "max_depth_fetched|3\nroot|GET http://127.0.0.1:39831/|9|0\ndupe_keys|0"
+    },
+    {
+      "cmd": "node bin/scanner.js http://127.0.0.1:39831/ --max-depth 6 --delay 500 --data-dir .verify-data2 & ... kill -INT; wait; sqlite3 .verify-data2/scans/1.sqlite \"select 'status',status from scans; select 'inflight',count(*) from queue where state='inflight'; select 'pending',count(*) from queue where state='pending'; select 'nodes',count(*) from nodes;\"",
+      "output": "EXIT=130\nstatus|stopped\ninflight|0\npending|5\nnodes|8"
+    },
+    {
+      "cmd": "node bin/scanner.js http://127.0.0.1:39831/ --resume 1 --delay 0 --data-dir .verify-data2; sqlite3 .verify-data2/scans/1.sqlite \"select 'status',status from scans; select 'pending',count(*) from queue where state='pending'; select 'inflight',count(*) from queue where state='inflight'; select 'nodes',count(*) from nodes; select 'edges',count(*) from edges;\"",
+      "output": "EXIT=0\nstatus|done\npending|0\ninflight|0\nnodes|18\nedges|21"
+    },
+    {
+      "cmd": "node bin/scanner.js http://127.0.0.1:39831/ --max-depth 2 --delay 0 --data-dir .verify-r1; sqlite3 .verify-r1/scans/1.sqlite \"select 'secret_rows',count(*) from nodes where key like '%secret%' and status is not null; select key,status,type from nodes where key like '%secret%';\"",
+      "output": "EXIT=0\nsecret_rows|0\nGET http://127.0.0.1:39831/secret||unresolved"
+    },
+    {
+      "cmd": "node bin/scanner.js http://127.0.0.1:39831/ --max-depth 2 --delay 0 --ignore-robots --data-dir .verify-r2; sqlite3 .verify-r2/scans/1.sqlite \"select 'secret_rows',count(*) from nodes where key like '%secret%' and status is not null; select key,status,type from nodes where key like '%secret%';\"",
+      "output": "EXIT=0\nsecret_rows|1\nGET http://127.0.0.1:39831/secret|200|page"
+    },
+    {
+      "cmd": "node bin/scanner.js http://127.0.0.1:39831/redirect-2 --max-depth 1 --delay 0 --data-dir .verify-rd; sqlite3 .verify-rd/scans/1.sqlite \"select key,status from nodes where type='endpoint'; select 'endpoint_edges',count(*) from edges e join nodes a on e.src=a.id join nodes b on e.dst=b.id where a.type='endpoint' and b.type='endpoint';\"",
+      "output": "EXIT=0\nGET http://127.0.0.1:39831/redirect-2|301\nGET http://127.0.0.1:39831/redirect-1|302\nendpoint_edges|1"
+    },
+    {
+      "cmd": "sqlite3 .verify-data/scans/1.sqlite \"select 'bodies',count(*) from bodies; select 'findings',count(*) from findings; select 'artifact_nodes',count(*) from nodes where type='artifact';\"",
+      "output": "bodies|12\nfindings|2\nartifact_nodes|2"
+    },
+    {
+      "cmd": "npm test",
+      "output": "EXIT=0\n# tests 79\n# pass 79\n# fail 0"
+    },
+    {
+      "cmd": "node --test tests/crawl.test.js",
+      "output": "EXIT=0\n# tests 7\n# pass 7\n# fail 0"
+    }
+  ]
+}

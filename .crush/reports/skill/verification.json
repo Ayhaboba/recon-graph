@@ -1,0 +1,87 @@
+{
+  "skill": "pentest-recon-graph",
+  "path": "/home/erema/.config/opencode/skills/pentest-recon-graph/SKILL.md",
+  "lines": 245,
+  "frontmatter": {
+    "name": "pentest-recon-graph",
+    "description_len": 296
+  },
+  "validation": {
+    "fixture": true,
+    "sequence": true,
+    "deliverable": true,
+    "acceptance": [
+      {
+        "id": "scope-file-before-scan",
+        "result": "pass"
+      },
+      {
+        "id": "scan-done-with-nodes",
+        "result": "pass"
+      },
+      {
+        "id": "finding-flag-high",
+        "result": "pass"
+      },
+      {
+        "id": "flag-url-present",
+        "result": "pass"
+      },
+      {
+        "id": "flag-body-proof",
+        "result": "pass"
+      },
+      {
+        "id": "flag-status-200",
+        "result": "pass"
+      },
+      {
+        "id": "report-confirmed-with-proof",
+        "result": "pass"
+      },
+      {
+        "id": "report-sections",
+        "result": "pass"
+      }
+    ]
+  },
+  "raw": [
+    {
+      "cmd": "node tests/site/server.js --port 0",
+      "output": "[fixture] listening on http://127.0.0.1:46373/"
+    },
+    {
+      "cmd": "node bin/scanner.js $TARGET --max-depth 4 --scope same-origin --wordlist lists/common.txt --delay 0 --data-dir .skill-accept/data",
+      "output": "(Use `node --trace-warnings ...` to show where the warning was created)\n[scanner] fuzz: tested=192 hits=5 soft=187 err=0\n[scanner] scan 1 complete: nodes=19 edges=22 done=15 err=0 pending=0\n[scanner] db: /home/erema/recon-graph/.skill-accept/data/scans/1.sqlite"
+    },
+    {
+      "cmd": "node bin/server.js --port 0 --data-dir .skill-accept/data",
+      "output": "[server] listening on http://127.0.0.1:45955/\n[server] ws: /ws data: /home/erema/recon-graph/.skill-accept/data"
+    },
+    {
+      "cmd": "sqlite3 -header -column $DB \"SELECT rule,severity,count(*) ... GROUP BY rule,severity\"",
+      "output": "rule  severity  n\n----  --------  -\nflag  high      1\ntodo  low       1"
+    },
+    {
+      "cmd": "sqlite3 -header -column $DB \"SELECT f.id,f.severity,f.rule,n.url,substr(f.snippet,1,160) ...\"",
+      "output": "id  severity  rule                url                                                          snippet\n--  --------  ----  --------------------------------  ------------------------------------------------------------------------------------------\n 1  high      flag  http://127.0.0.1:46373/flag.html  ></head> <body> <h1>Flag page</h1> <pre>flag{demo}</pre> <!-- TODO: remove this demo artif\n 2  low       todo  http://127.0.0.1:46373/flag.html  ag page</h1> <pre>flag{demo}</pre> <!-- TODO: remove this demo artifact before produ"
+    },
+    {
+      "cmd": "curl -sS -D headers -o body $BASE/flag.html && grep -o 'flag{demo}' body",
+      "output": "HTTP/1.1 200 OK\nContent-Type: text/html; charset=utf-8\r\nContent-Length: 219\r\nflag{demo}"
+    },
+    {
+      "cmd": "node lib/db.js --self-test",
+      "output": "PASS open-readonly: read ok, write blocked, missing throws\nPASS cleanup: closed + tmpdir removed\nSUMMARY pass=20 fail=0"
+    },
+    {
+      "cmd": "fixture acceptance checks",
+      "output": "TARGET=http://127.0.0.1:46373/\nID=1\n(Use `node --trace-warnings ...` to show where the warning was created)\n[scanner] fuzz: tested=192 hits=5 soft=187 err=0\n[scanner] scan 1 complete: nodes=19 edges=22 done=15 err=0 pending=0\n[scanner] db: /home/erema/recon-graph/.skill-accept/data/scans/1.sqlite\n[server] listening on http://127.0.0.1:45955/\n[server] ws: /ws data: /home/erema/recon-graph/.skill-accept/data\nPASS scope-file-before-scan\nPASS scan-done-with-nodes\nPASS finding-flag-high\nPASS flag-url-present\nPASS flag-body-proof\nPASS flag-status-200\nPASS report-confirmed-with-proof\nPASS report-sections\nSUMMARY 8/8\nSCAN_RC=0 VAL_RC=0 REPORT=.skill-accept/data/scans/1.report.md"
+    },
+    {
+      "cmd": "deliverable .skill-accept/data/scans/1.report.md",
+      "output": "# Recon report — http://127.0.0.1:46373/\n\n## Target and scope\nTarget: http://127.0.0.1:46373/\nScope: same-origin, max depth 4, robots honoured, methods GET/HEAD.\nAuthorization: local fixture tests/site (skill validation).\nScan id: 1.\n\n## Map\n```\nid  status          target           mode\n--  ------  -----------------------  -----\n 1  done    http://127.0.0.1:46373/  crawl\n\n   type     n\n----------  --\npage        12\nasset        5\nartifact     2\nunresolved   2\nendpoint     1\n\ndegree  status  type                  url\n------  ------  -----  ---------------------------------\n    14     200  page   http://127.0.0.1:46373/\n     5     200  asset  http://127.0.0.1:46373/app.js\n     4     200  page   http://127.0.0.1:46373/page1.html\n     3     200  asset  http://127.0.0.1:46373/style.css\n     3     200  page   http://127.0.0.1:46373/admin\n     3     200  page   http://127.0.0.1:46373/flag.html\n     3     200  page   http://127.0.0.1:46373/page3.html\n     2     200  page   http://127.0.0.1:46373/page2.html\n     2     200  page   http://127.0.0.1:46373/api/v1\n     2     200  page   http://127.0.0.1:46373/page4.html\n```\n\n## Findings\n### HIGH | flag | http://127.0.0.1:46373/flag.html | confirmed\nEvidence:\n```\nHTTP/1.1 200 OK\nContent-Type: text/html; charset=utf-8\nContent-Length: 219\nflag{demo}\n```\nBody snippet contains the flag marker; node status is 200.\n\n```\nid  severity  rule                url                                                          snippet\n--  --------  ----  --------------------------------  ------------------------------------------------------------------------------------------\n 1  high      flag  http://127.0.0.1:46373/flag.html  ></head> <body> <h1>Flag page</h1> <pre>flag{demo}</pre> <!-- TODO: remove this demo artif\n 2  low       todo  http://127.0.0.1:46373/flag.html  ag page</h1> <pre>flag{demo}</pre> <!-- TODO: remove this demo artifact before produ\n```\n\n## Recommendations\n- Remove the demo flag marker from production content.\n- Audit public/static content for other markers and TODOs.\n\n## Not tested\n- Destructive methods (POST/PUT/PATCH/DELETE)."
+    }
+  ],
+  "failures": []
+}

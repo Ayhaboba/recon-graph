@@ -1,0 +1,55 @@
+{
+  "stage": 6,
+  "verdict": "PASS",
+  "score": 86,
+  "checks": [
+    {
+      "id": "1-snapshot-pagination",
+      "result": "pass",
+      "evidence": "web/recon.js:470-485 uses the last node id as after, requests another page only when the page has 5000 nodes, and finalizes on <5000; mergeNodes/mergeEdges dedupe by id (141-166) and buildDataset attaches each stored edge to its src key (188-197); lib/stream.js:80-95 pages id>after and selects edges whose src is in the same page, so no duplicate/lost ids or misattached edges in the normal page sequence."
+    },
+    {
+      "id": "2-delta-content",
+      "result": "pass",
+      "evidence": "web/recon.js:487-507 merges every delta node/edge into the local map before setData; buildDataset (174-209) covers all live ids, so every new node, every degree-changed node, and every edge src is present with its full local links map, and an edge inserted between two long-existing nodes is included on the next rebuild."
+    },
+    {
+      "id": "3-partial-setdata",
+      "result": "fail",
+      "evidence": "web/recon.js:174-215 builds and web/recon.js:501 calls R.setData with the entire live node set on every delta, never the §6.1 partial dataset (the comment at 168-173 admits the full-set choice); positions still survive because every live id is present, but the verbatim engine prunes ids absent from the incoming dataset (web/vendor/graph-view.js:633-647), so the literal partial call required by §6.1 cannot be used without an engine change."
+    },
+    {
+      "id": "4-type-and-weight",
+      "result": "pass",
+      "evidence": "web/recon.js:15-23 maps page \"\", endpoint attachment, artifact tag, unresolved unresolved, asset \"\", param attachment, focused focused; weights are taken from degree in buildDataset (199-209) and consumed by the engine at web/vendor/graph-view.js:690-694 and getSize (194), so node radius follows degree."
+    },
+    {
+      "id": "5-scan-switch",
+      "result": "pass",
+      "evidence": "web/recon.js:289-324 sends close for the old scan, resets nodesById/edgesByPair and clears the renderer, then sends open for the new scan; onSnapshot (453-455) rejects replies whose scanId does not match both loading and currentScanId, and finalizeLoad (357-369) resolves only the matching pending generation; no location change or page reload exists."
+    },
+    {
+      "id": "6-socket-lifecycle",
+      "result": "pass",
+      "evidence": "web/recon.js:570-619 uses RECONNECT_DELAYS with a single guarded retryTimer; onHelloOk (390-414) sends exactly one scans/open pair per connection and restarts pagination, beforeunload (688-698) clears the timer and closes the socket, and onMessage (534-543) swallows malformed JSON."
+    },
+    {
+      "id": "7-test-integrity",
+      "result": "pass",
+      "evidence": "tests/client.test.js:289-343 spawns real chromium and tests/client.test.js:510-543 connects over CDP and navigates the live server; the reload test preserves window.__marker (583-606) and the delta test compares real positions before/after and requires surviving ids (608-689); local run: node --test tests/client.test.js => 6/6 pass."
+    }
+  ],
+  "issues": {
+    "critical": [],
+    "high": [],
+    "medium": [
+      "Delta handling rebuilds the full live dataset instead of the §6.1 partial dataset (web/recon.js:174-215,501), making each delta O(nodes+edges); the engine prunes ids absent from the incoming set (web/vendor/graph-view.js:633-647), so the spec's literal partial set would drop unchanged nodes — behavior is position-safe only because all live ids are included."
+    ],
+    "low": [
+      "A duplicate first-page snapshot for the same scan can early-finalize pagination: web/recon.js:457-480 treats the second first page as a page reply and finalizes when after <= lastAfter, so a >5000-node scan can lose later pages on a programmatic same-scan switch or duplicate open; the normal UI prevents same-scan selection.",
+      "The same-scan re-open fallback in tests/client.test.js:665-685 is unreachable because assert.ok(grew) at line 644 already fails, so that path is not exercised.",
+      "tests/client.test.js:691-725 only samples /admin and /api/ nodes for the type check; artifact, asset, and param mappings are verified by code inspection, not by the browser test."
+    ]
+  },
+  "criterion_met": true
+}

@@ -1,0 +1,54 @@
+{
+  "worker_id": "worker-3",
+  "stage": 3,
+  "status": "completed-by-finisher",
+  "focus_area": "fixture_and_tests",
+  "owned_files": [
+    "tests/site/server.js",
+    "tests/site/index.html",
+    "tests/site/page1.html",
+    "tests/site/page2.html",
+    "tests/site/page3.html",
+    "tests/site/page4.html",
+    "tests/site/page5.html",
+    "tests/crawl.test.js"
+  ],
+  "completed_work": [
+    "Rewrote tests/site/index.html to link exactly page1.html, style.css, app.js, admin/, flag.html, secret and https://external.invalid/x, removing direct page2/page3 links that collapsed the depth chain.",
+    "Made the fixture chain unambiguous: page1 -> page2 -> page3 -> page4/page5, so page1 is depth 1, page2 depth 2, page3 depth 3, and page4/page5 stay beyond max-depth 3 as unresolved nodes with no status.",
+    "Updated tests/crawl.test.js depth expectations to page1=1, page2=2, page3=3 and added a strict assertion that /page4.html exists as unresolved with status null and depth >= 4.",
+    "Kept all other assertions: node/edge count, root degree, robots default/ignore behavior, redirect endpoint nodes, SIGINT/requeue, resume continuation, rerun dedupe, and CLI rejection cases."
+  ],
+  "commands": [
+    {
+      "cmd": "node --check tests/site/server.js && node --check tests/crawl.test.js",
+      "result": "ok"
+    },
+    {
+      "cmd": "node --test tests/crawl.test.js",
+      "result": "7/7 pass"
+    },
+    {
+      "cmd": "npm test",
+      "result": "79/79 pass"
+    }
+  ],
+  "probe_results": {
+    "fixture_server": "tests/site/server.js --port 0",
+    "nodes": 18,
+    "edges": 20,
+    "max_depth_fetched": 3,
+    "page1_depth": 1,
+    "page2_depth": 2,
+    "page3_depth": 3,
+    "page4_status": null,
+    "page4_type": "unresolved",
+    "robots_secret_status": null,
+    "ignore_robots_secret_status": 200,
+    "test_pass_rate": "7/7 crawl, 79/79 total"
+  },
+  "errors": [],
+  "notes": [
+    "The original index linked page2 directly, which made page2 depth 1 and broke the depth-3 chain; that link was removed and the fixture now has a single linear crawl chain."
+  ]
+}

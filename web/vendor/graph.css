@@ -1,0 +1,151 @@
+/*
+ * graph.css — standalone page styles for the extracted Obsidian graph view.
+ * Palette values are the real Obsidian dark theme values from
+ * /home/erema/obsidian-re/app/app.css. Source line numbers are cited per block.
+ * No --color-base-80 / --color-base-90: app.css does not define them and no
+ * rule below references them.
+ */
+
+/* ------------------------------------------------------------------------- */
+/* Obsidian dark palette — app.css:3029-3060 (.theme-dark)                    */
+/* ------------------------------------------------------------------------- */
+
+:root {
+  /* app.css:3044-3055 */
+  --color-base-00: #1C1C1C;
+  --color-base-10: #232323;
+  --color-base-20: #282828;
+  --color-base-30: #333333;
+  --color-base-35: #3f3f3f;
+  --color-base-40: #555555;
+  --color-base-50: #666666;
+  --color-base-60: #999999;
+  --color-base-70: #b3b3b3;
+  --color-base-100: #dadada;
+
+  /* app.css:3036-3039 */
+  --color-red: #fb464c;
+  --color-orange: #e9973f;
+  --color-yellow: #e0de71;
+  --color-green: #44cf6e;
+
+  /* accent HSL — app.css:2939-2941 */
+  --accent-h: 258;
+  --accent-s: 88%;
+  --accent-l: 66%;
+
+  /* derived accent colours — app.css:3041-3043 */
+  --color-accent: hsl(var(--accent-h), var(--accent-s), var(--accent-l));
+  --color-accent-1: hsl(calc(var(--accent-h) - 3), calc(var(--accent-s) * 1.02), calc(var(--accent-l) * 1.15));
+
+  /* semantic mapping — app.css:2943-2945, 2961-2963, 3069-3070 */
+  --background-primary: var(--color-base-00);
+  --background-secondary: var(--color-base-20);
+  --text-normal: var(--color-base-100);
+  --text-muted: var(--color-base-70);
+  --text-faint: var(--color-base-50);
+  --text-accent: var(--color-accent-1);
+  --interactive-accent: var(--color-accent);
+
+  /* graph variables — app.css:2309-2316 */
+  --graph-controls-width: 240px;
+  --graph-text: var(--text-normal);
+  --graph-line: var(--color-base-35, var(--background-modifier-border-focus));
+  --graph-node: var(--text-muted);
+  --graph-node-unresolved: var(--text-faint);
+  --graph-node-focused: var(--text-accent);
+  --graph-node-tag: var(--color-green);
+  --graph-node-attachment: var(--color-yellow);
+}
+
+/* ------------------------------------------------------------------------- */
+/* page layout                                                               */
+/* ------------------------------------------------------------------------- */
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--background-primary);
+  font-family: var(--font-interface, system-ui, sans-serif);
+}
+
+.graph-view {
+  position: fixed;
+  inset: 0;
+}
+
+/* ------------------------------------------------------------------------- */
+/* Graph colour utility rules — app.css:16750-16802 (17 selectors, verbatim)  */
+/* ------------------------------------------------------------------------- */
+
+.graph-view.color-fill {
+  color: var(--graph-node);
+}                                                                          /* app.css:16750 */
+
+.graph-view.color-fill-focused {
+  color: var(--graph-node-focused);
+}                                                                          /* app.css:16753 */
+
+.graph-view.color-fill-tag {
+  color: var(--graph-node-tag);
+}                                                                          /* app.css:16756 */
+
+.graph-view.color-fill-attachment {
+  color: var(--graph-node-attachment);
+}                                                                          /* app.css:16759 */
+
+.graph-view.color-fill-unresolved {
+  color: var(--graph-node-unresolved);
+  opacity: 0.5;
+}                                                                          /* app.css:16762 */
+
+.graph-view.color-fill-1 {
+  color: var(--text-muted);
+}                                                                          /* app.css:16766 */
+
+.graph-view.color-fill-2 {
+  color: var(--text-muted);
+}                                                                          /* app.css:16769 */
+
+.graph-view.color-fill-3 {
+  color: var(--text-muted);
+}                                                                          /* app.css:16772 */
+
+.graph-view.color-fill-4 {
+  color: var(--text-muted);
+}                                                                          /* app.css:16775 */
+
+.graph-view.color-fill-5 {
+  color: var(--text-muted);
+}                                                                          /* app.css:16778 */
+
+.graph-view.color-fill-6 {
+  color: var(--text-muted);
+}                                                                          /* app.css:16781 */
+
+.graph-view.color-arrow {
+  color: var(--text-normal);
+  opacity: 0.5;
+}                                                                          /* app.css:16784 */
+
+.graph-view.color-circle {
+  color: var(--graph-node-focused);
+}                                                                          /* app.css:16788 */
+
+.graph-view.color-line {
+  color: var(--graph-line);
+}                                                                          /* app.css:16791 */
+
+.graph-view.color-text {
+  color: var(--graph-text);
+}                                                                          /* app.css:16794 */
+
+.graph-view.color-fill-highlight {
+  color: var(--interactive-accent);
+}                                                                          /* app.css:16797 */
+
+.graph-view.color-line-highlight {
+  color: var(--interactive-accent);
+}                                                                          /* app.css:16800 */

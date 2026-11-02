@@ -1,0 +1,26 @@
+{
+  "worker_id": "worker-3",
+  "stage": 1,
+  "status": "success",
+  "files_written": ["tests/db.test.js"],
+  "node_test": {
+    "tests": 10,
+    "pass": 10,
+    "fail": 0,
+    "raw_tail": "ok 1 - schema objects exist\nok 2 - migrations are idempotent\nok 3 - upsertNode inserts once and dedups by key\nok 4 - degree maintained by triggers\nok 5 - edge unique constraint\nok 6 - fts finds body text\nok 7 - fts no LIMIT by default\nok 8 - fts body truncation at 2 MiB\nok 9 - delta by rev\nok 10 - stats counts\n# tests 10\n# pass 10\n# fail 0\n# skipped 0\n# duration_ms 163.174846"
+  },
+  "commands": [
+    {
+      "cmd": "node --check tests/db.test.js",
+      "exit": 0,
+      "tail": "SYNTAX_OK"
+    },
+    {
+      "cmd": "node --test tests/db.test.js",
+      "exit": 0,
+      "tail": "# tests 10\n# pass 10\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 163.174846"
+    }
+  ],
+  "notes": "File uses one temp dir + one sqlite db created in before() and removed in after(); one in-memory DB for the idempotency test is closed inside the test. node:sqlite require is guarded; on ERR_UNKNOWN_BUILTIN_MODULE the suite is emitted as a skipped test instead of crashing. Tests share a single db file but each behaviour test creates its own scan, so counts/rev/delta assertions are isolated. All 10 tests passed on the first run against lib/db.js + lib/migrate.js as landed, no test weakenings needed.",
+  "blockers": []
+}

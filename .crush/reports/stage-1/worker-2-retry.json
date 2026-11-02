@@ -1,0 +1,40 @@
+{
+  "worker_id": "worker-2",
+  "stage": 1,
+  "retry": 1,
+  "status": "success",
+  "files_written": ["lib/db.js"],
+  "self_test": {
+    "pass": 20,
+    "fail": 0,
+    "raw_tail": "PASS fts-excludes-oversized: no body tokens indexed, fts_truncated=1, fts body NULL\nPASS fts-url-still-searchable: hit node=4 via url/title, snippet=\"\"\nPASS delta-edge-after-cursor: cursor=18 edgeRev=21 edges=1 nodes=2(degree)\nPASS partial-upsert-preserves: id=5 fields preserved rev=22\nPASS attrs-key-order-noop: rev=23 attrs_json={\"a\":1,\"b\":2}\nPASS node-delete-clears-fts: search=0 fts_docs=0 after node delete\nPASS stats-queue-states: pending=1 inflight=1 done=1 err=1\nPASS open-readonly: read ok, write blocked, missing throws\nPASS cleanup: closed + tmpdir removed\nSUMMARY pass=20 fail=0"
+  },
+  "probes": {
+    "h1_oversized_excluded": true,
+    "h2_edge_after_cursor": true
+  },
+  "commands": [
+    {
+      "cmd": "node --check lib/db.js",
+      "exit": 0,
+      "tail": ""
+    },
+    {
+      "cmd": "node lib/db.js --self-test",
+      "exit": 0,
+      "tail": "SUMMARY pass=20 fail=0"
+    },
+    {
+      "cmd": "node .probe-tmp/probe.js (independent public-API probe; script removed afterwards)",
+      "exit": 0,
+      "tail": "{\"h1_oversized_excluded\":true,\"h2_edge_after_cursor\":true}"
+    },
+    {
+      "cmd": "npm test 2>&1 | tail -30",
+      "exit": 0,
+      "tail": "1..21\n# tests 21\n# suites 0\n# pass 21\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 127.861432"
+    }
+  ],
+  "notes": "H1: putBody guards on Buffer.byteLength(text,'utf8') > 2 MiB, keeps bodies.text truncated for preview, sets fts_truncated=1 and writes fts_docs.body=NULL so url/title stay searchable but body tokens never enter node_fts; snippet NULL maps to ''. H2: nodes.rev and edges.rev use the shared rev_seq; delta runs both SELECTs in one snapshot (withTransaction for writer handles, deferred read transaction on read-only handles) and returns MAX(rev) across returned rows floored at afterRev, so an edge inserted after a node cursor is delivered. delta-edge-after-cursor returns 1 edge; 2 nodes also appear because edges_degree_insert bumps both endpoint degrees and nodes_rev_update includes degree (spec §6 requires degree changes to reach clients), so the endpoints' revs legitimately advance above the cursor. M1: absent fields keep stored values, explicit null clears; dynamic SET names only changed columns (label-only change no longer bumps rev). M2: attrs canonicalised with recursive sortKeys. M4: upsertNodes/addEdges exist (single transaction each), putBody writes bodies+fts_docs in one transaction. M5: stats returns {nodes,edges,byType,pending,inflight,done,err}. M6: openReadOnly opens readOnly, busy_timeout only, no migrations, throws on missing file. M7: isFtsSyntaxError catches only SQLITE_ERROR/errcode 1 with fts5/syntax/malformed/unterminated messages; other errors rethrow. L11: search hit now {nodeId,url,title,snippet,rule} with rule from a LEFT JOIN to the first findings row per node, still one query. Intermediate npm test failure seen while worker-3 was rewriting tests/db.test.js (queue.origin NOT NULL at old line 533 and a 0-nodes edge-delta assertion) resolved in the final worker-3 version; final run 21/21. The independent probe was placed under project .probe-tmp because the sandbox denies /tmp paths; it was deleted after the run.",
+  "blockers": []
+}

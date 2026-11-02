@@ -1,0 +1,32 @@
+{
+  "worker_id": "worker-3",
+  "stage": 1,
+  "retry": 1,
+  "status": "success",
+  "files_written": ["tests/db.test.js"],
+  "node_test": {
+    "tests": 21,
+    "pass": 21,
+    "fail": 0,
+    "raw_tail": "1..21\n# tests 21\n# suites 0\n# pass 21\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 123.929105"
+  },
+  "commands": [
+    {
+      "cmd": "node --check tests/db.test.js",
+      "exit": 0,
+      "tail": ""
+    },
+    {
+      "cmd": "npm test",
+      "exit": 0,
+      "tail": "1..21\n# tests 21\n# suites 0\n# pass 21\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 123.929105"
+    },
+    {
+      "cmd": "node lib/db.js --self-test",
+      "exit": 0,
+      "tail": "PASS open-readonly: read ok, write blocked, missing throws\nPASS cleanup: closed + tmpdir removed\nSUMMARY pass=20 fail=0"
+    }
+  ],
+  "notes": "Suite rewritten to the retry contract: 10 original tests kept, dead 'needle-at-tail' assertion replaced by real oversized-body exclusion assertions (HEADTOKEN in kept 2 MiB and TAILTOKEN in dropped tail both 0 hits), schema test now requires rev_seq + nodes_ad, migrations test requires migrate.withTransaction and rev_seq.value=0 on a fresh DB, stats updated to {pending,inflight,done,err}. 11 new tests added (oversized excluded, oversized url searchable, delta edge after cursor, delta node after edge cursor, partial upsert, explicit null, attrs key order, node delete clears fts, stats queue states, bulk upsert/addEdges, openReadOnly). All 21 pass against final lib/db.js + lib/migrate.js (node --check clean, npm test exit 0, lib self-test 20/20 exit 0). DEVIATION from the literal retry wording for 'delta delivers edge after cursor': the prompt asked for exactly 1 edge and 0 nodes, but inserting an edge fires edges_degree_insert, which updates degree on both endpoints, which fires nodes_rev_update (degree is in the trigger's column list per spec §5), so the two endpoints legitimately carry rev > cursor and appear in delta. Spec §6 explicitly requires degree changes to reach the client. The test therefore asserts exactly 1 edge with the expected src/dst, no unrelated nodes (sorted ids equal [src,dst]), and a strictly advanced cursor; under the old per-table counter bug the edge was 0, so the H2 regression is still caught. No lib/* file was modified.",
+  "blockers": []
+}

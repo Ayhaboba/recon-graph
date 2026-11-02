@@ -1,0 +1,60 @@
+{
+  "stage": 3,
+  "verdict": "PASS",
+  "score": 93,
+  "checks": [
+    {
+      "id": "claimNext",
+      "result": "pass",
+      "evidence": "db.js:446 withTransaction (BEGIN IMMEDIATE, migrate.js:47); SELECT 447-454 then guarded UPDATE 457-464 inside same tx"
+    },
+    {
+      "id": "dedupe",
+      "result": "pass",
+      "evidence": "migrate.js:132 UNIQUE(scan_id,key); migrate.js:201 UNIQUE(scan_id,url,kind); db.js:424 INSERT OR IGNORE; scanner.js:492 resume seeds root only when queue empty"
+    },
+    {
+      "id": "depth",
+      "result": "pass",
+      "evidence": "crawl.js:715 rowDepth from queue row; crawl.js:642 depth>maxDepth so maxDepth inclusive; crawl.js:1000 child depth=rowDepth+1; OR IGNORE keeps first (shallowest) queue depth"
+    },
+    {
+      "id": "redirects",
+      "result": "pass",
+      "evidence": "crawl.js:726 visited Set loop detect; crawl.js:752 resolveUrl(location,current) per hop; crawl.js:870-894 every hop endpoint node; 924-932 chain edge; 938-944 loop-close edge"
+    },
+    {
+      "id": "scope",
+      "result": "pass",
+      "evidence": "crawl.js:403-411 originOf equality (scheme+host+port) / hostnameOf / any; crawl.js:630-644 unresolved node created then early return before enqueue for out-of-scope"
+    },
+    {
+      "id": "robots",
+      "result": "pass",
+      "evidence": "crawl.js:248-302 parseRobots '*' plus UA token groups; 304-315 longest prefix startsWith; 414 empty rules = allow-all; 1091 loadRobots called once per run"
+    },
+    {
+      "id": "transactions",
+      "result": "pass",
+      "evidence": "crawl.js:741 HTTP await outside; crawl.js:896-1014 synchronous withTransaction, no await inside; crawl.js:1007-1010 and 1033-1041 set err + last_error (db.js:486)"
+    },
+    {
+      "id": "sigint",
+      "result": "pass",
+      "evidence": "scanner.js:448-461 stop; scanner.js:551 requeueInflight before scanner.js:573 status=stopped with stats; scanner.js:578 return 130; scanner.js:449-451 second signal process.exit(130); db.js:266-272 writes stats_json"
+    }
+  ],
+  "issues": {
+    "critical": [],
+    "high": [],
+    "medium": [
+      "Resume re-derives crawler options from current CLI defaults (scanner.js:535 optionsForCrawler) instead of scans.options_json: a scan created with --max-depth 3/--scope host resumed without flags silently runs maxDepth 6/same-origin (getScan reads only target)."
+    ],
+    "low": [
+      "Under --scope any robots.txt is fetched only for the target origin (crawl.js:556-588), so non-origin hosts are crawled without their robots rules.",
+      "UA group matching is bidirectional includes (crawl.js:296), broader than token match."
+    ]
+  },
+  "edge_anomaly": "Not non-determinism or duplication. The 20-edge baseline ran --max-depth 3, while the interrupted run and its resume both used --max-depth 6 (verification.json raw command). At depth 6 /page4.html is fetched (depth 4); its only link /page5.html was already an unresolved node discovered from /page3.html, so exactly one new link edge page4->page5 is added with no new node (page5 node pre-existed), giving 21 vs 20 with the same 18 nodes. Edge identity is UNIQUE(scan_id,src,dst,kind) (migrate.js:146) and addEdge is INSERT OR IGNORE (db.js:533), so a duplicate triple cannot exist; node identity is UNIQUE(scan_id,key). Severity low: comparison artifact plus the medium option-drift issue above.",
+  "criterion_met": true
+}

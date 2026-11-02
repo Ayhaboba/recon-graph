@@ -1,0 +1,138 @@
+{
+  "worker_id": "worker-2",
+  "stage": 5,
+  "focus_area": "stream_hub",
+  "timestamp": "2026-11-02T00:09:43Z",
+  "status": "completed",
+  "transport": "ws",
+  "ws_version": "8.22.1",
+  "red_green_refactor_completed": false,
+  "files_owned": ["lib/stream.js", ".crush/state/deviations.md"],
+  "files_written": ["lib/stream.js", ".crush/state/deviations.md", ".crush/reports/stage-5/worker-2.json"],
+  "files_touched_by_transport": ["package.json", "package-lock.json", "node_modules/ws"],
+  "execution_log": [
+    {
+      "task": "transport decision",
+      "type": "bash-command",
+      "command": "npm install ws@8 --no-audit --no-fund",
+      "status": "success",
+      "result": "ws@8.22.1 installed and saved; WebSocketServer({noServer:true}) used, no hand-rolled RFC6455 implementation"
+    },
+    {
+      "task": "create lib/stream.js",
+      "type": "create-file",
+      "status": "success",
+      "result": "createHub({dataDir,pollMs}) exports handleUpgrade(req,socket,head), close(), scans(), plus a handlers object for stage 7/8"
+    },
+    {
+      "task": "read-only scan discovery",
+      "type": "implementation",
+      "status": "success",
+      "result": "scans() globs <dataDir>/scans/<N>.sqlite, opens each via db.openReadOnly, reads scans + db.stats counts, sorts by id, warns and skips missing/corrupt/rowless files"
+    },
+    {
+      "task": "per-client protocol",
+      "type": "implementation",
+      "status": "success",
+      "result": "hello/proto gate (proto!==1 -> {t:error,code:proto} + 1002 close), scans, open (snapshot page limit 5000), page (after/limit clamp 1..5000, edges by src in page), close; search/node/action -> {t:error,code:not-implemented,of}"
+    },
+    {
+      "task": "polling fan-out",
+      "type": "implementation",
+      "status": "success",
+      "result": "one interval per hub; per-subscriber db.delta(handle,scanId,cursor) with per-client cursor; delta only when non-empty; progress at most 1/s per scan and only on changed stats"
+    },
+    {
+      "task": "read-only lifecycle",
+      "type": "implementation",
+      "status": "success",
+      "result": "one shared read-only handle per open scan; close after last subscriber leaves plus 30s idle grace; close() stops interval, closes sockets with 1001, closes all handles; socket errors drop only that client"
+    },
+    {
+      "task": "record deviation",
+      "type": "edit-file",
+      "file": ".crush/state/deviations.md",
+      "status": "success",
+      "result": "Stage 5 line added: ws transport + snapshot cursor semantics"
+    },
+    {
+      "task": "syntax + API smoke",
+      "type": "bash-command",
+      "command": "node --check lib/stream.js && node -e \"createHub(...); typeof checks; close\"",
+      "status": "success",
+      "result": "no syntax errors; handleUpgrade=function close=function scans=array"
+    },
+    {
+      "task": "full test suite",
+      "type": "bash-command",
+      "command": "npm test",
+      "status": "success",
+      "result": "92/92 pass, 0 fail (includes stage-5 stream.test.js: two-client snapshot, page, delta, progress, protocol errors, server read-only)"
+    },
+    {
+      "task": "two-client live probe",
+      "type": "probe",
+      "status": "success",
+      "result": "scanner ran against tests/site with 60-word fuzz list; both clients received live deltas and changing progress; final snapshots matched exactly"
+    }
+  ],
+  "probe": {
+    "clients": 2,
+    "scan_id": 1,
+    "transport": "ws",
+    "final_nodes": 18,
+    "final_edges": 21,
+    "final_rev": 95,
+    "snapshot_frames_per_client": 2,
+    "delta_frames_per_client": 14,
+    "delta_nodes_per_client": 28,
+    "progress_frames_per_client": 3,
+    "progress_distinct_stats": 3,
+    "progress_stats_observed": [
+      {"pending": 2, "inflight": 4, "done": 1, "err": 0, "nodes": 8, "edges": 7},
+      {"pending": 0, "inflight": 2, "done": 11, "err": 0, "nodes": 16, "edges": 18},
+      {"pending": 0, "inflight": 0, "done": 15, "err": 0, "nodes": 18, "edges": 21}
+    ],
+    "during_run_per_client": {
+      "deltas": 14,
+      "progress": 3
+    },
+    "final_snapshot_node_counts": {"client_a": 18, "client_b": 18},
+    "client_errors": 0,
+    "scan_status_after_run": "done"
+  },
+  "summary": {
+    "files_created": 1,
+    "files_modified": 1,
+    "tests_run": 92,
+    "tests_passed": 92,
+    "tests_failed": 0,
+    "probe_clients": 2,
+    "probe_deltas": 28,
+    "probe_progress": 6,
+    "probe_per_client": {"deltas": 14, "progress": 3}
+  },
+  "criterion_checks": {
+    "two_clients_same_snapshot": true,
+    "nodes_arrive_without_reload": true,
+    "progress_changes_over_time": true,
+    "server_never_writes": true,
+    "missing_scan_returns_no_scan": true,
+    "proto_mismatch_closes": true,
+    "close_code_1001": true
+  },
+  "known_issues": [],
+  "notes": [
+    "Tests are owned by worker-3; worker-2 did not author tests. The existing stage-5 suite was run unmodified and passes 92/92.",
+    "A scan DB observed mid-migration is skipped with a console warning instead of failing the scans() call.",
+    "Snapshot cursor is the max rev read inside the same deferred read transaction as the page; client-supplied open.rev is ignored because a full snapshot supersedes it.",
+    "progress stats omit skip (spec §6 shape) while db.stats still reports it internally."
+  ],
+  "definition_of_done_verified": {
+    "tests_exist": true,
+    "tests_passing": true,
+    "implementation_matches_plan": true,
+    "no_todo_comments": true,
+    "all_file_changes_real": true
+  }
+}

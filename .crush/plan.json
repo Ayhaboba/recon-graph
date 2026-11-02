@@ -1,0 +1,1 @@
+{"stage":4,"title":"dictionary fuzzer with soft-404 detection","criterion":"tests/site: /admin, /backup.zip, /api/v1/ found; /nonexistent not a finding; soft-404 not a finding","workers":{"worker-1":["lib/fuzz.js"],"worker-2":["bin/scanner.js","lists/common.txt"],"worker-3":["tests/fuzz.test.js"]}}

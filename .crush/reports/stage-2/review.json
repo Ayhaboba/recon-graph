@@ -1,0 +1,203 @@
+{
+  "stage": 2,
+  "reviewer": "worker-agent (read-only stand-in)",
+  "verdict": "RETRY",
+  "score": 68,
+  "checks": [
+    {
+      "id": "criterion-key-pair",
+      "result": "pass",
+      "evidence": "tests/norm.test.js:22-29 — key('//host/a?b=2&a=1') and key('https://host/a?a=1&b=2') both 'GET https://host/a?a=1&b=2'; direct probe equality=true"
+    },
+    {
+      "id": "criterion-fixtures-exist-and-run",
+      "result": "pass",
+      "evidence": "5 HTML (attrs/basic/css/flag/nested) + 3 JS (bundle/endpoints/secrets) present; `npm test` = 53 tests, 53 pass, 0 fail; verification.json fixtures.html_count=5, js_count=3"
+    },
+    {
+      "id": "norm-protocol-relative-inherits-base-scheme",
+      "result": "pass",
+      "evidence": "lib/norm.js:280-282 — normalizeUrl('//host/x','http://site.test/')='http://host/x'; with https base='https://host/x'; tests/norm.test.js:106 covers resolveUrl('//cdn.test/z', http base)='http://cdn.test/z'; no-base defaults https at line 112"
+    },
+    {
+      "id": "norm-userinfo-handling",
+      "result": "fail",
+      "evidence": "lib/norm.js:63-68,211 — userinfo is kept verbatim: normalizeUrl('https://u:p@h/x')='https://u:p@h/x'; key('https://u:p@h/x')='GET https://u:p@h/x' while key('https://h/x')='GET https://h/x'. Same resource gets two keys and credentials enter key/label; spec key shape has no userinfo"
+    },
+    {
+      "id": "norm-ipv6",
+      "result": "pass",
+      "evidence": "lib/norm.js:73-82,54-56 — normalizeUrl('http://[::1]:8080/x')='http://[::1]:8080/x'; 'http://[::1]:80/x'='http://[::1]/x'; bracketed host/port split correct; zone-id form '[fe80::1%25eth0]' returns null (low)"
+    },
+    {
+      "id": "norm-query-edge-cases",
+      "result": "pass",
+      "evidence": "lib/norm.js:146-187 — probe: '?a&b=1'->'a&b=1'; '?a=1&a=1'->'a=1&a=1'; '+a' vs '%20' remain distinct; raw '#' starts fragment, '%23' kept; '?=' yields an empty-name param '=' and ';' is not a separator (low)"
+    },
+    {
+      "id": "norm-dot-segment-smuggling",
+      "result": "pass",
+      "evidence": "lib/norm.js:107-143 — probe normalizeUrl('https://h/a/%2e%2e/b')='https://h/a/%2E%2E/b'; encoded dots are not decoded and do not collapse, so no client-side traversal; '/a/../b' resolves normally; server-side decode may still alias keys (low)"
+    },
+    {
+      "id": "norm-host-idn-and-trailing-dot",
+      "result": "fail",
+      "evidence": "lib/norm.js:39-43 — ASCII-only lowercasing: normalizeUrl('https://HÖST.test/A')='https://hÖst.test/A' vs 'https://höst.test/A'='https://höst.test/A'; tests/norm.test.js:174 enshrines this. normalizeUrl('https://host./x')='https://host./x' vs 'https://host/x' — trailing-dot host not canonicalised (spec §4.1 says host lowercased; duplicate-node risk)"
+    },
+    {
+      "id": "norm-index-html-and-query",
+      "result": "pass",
+      "evidence": "lib/norm.js:133-140 — 'https://h/index.html?x=1'->'https://h/?x=1'; 'https://h/dir/index.html?x=1'->'https://h/dir?x=1'; tests/norm.test.js:40-47 asserts the same"
+    },
+    {
+      "id": "norm-key-method-normalisation",
+      "result": "pass",
+      "evidence": "lib/norm.js:343-352 — key(url,'post')='POST ...'; key(url,' get ')='GET ...'; key(url)='GET ...'; non-GET methods are accepted without whitelist (low)"
+    },
+    {
+      "id": "extract-html-attribute-forms",
+      "result": "pass",
+      "evidence": "lib/extract.js:76,78-92,297-315 — probes: <a href=/x>, <a href='/y'>, <A HREF=...>, newline inside quoted value, <img src='/sc.png'/> all produce the expected absolute URL; uppercase tag/attr lowercased"
+    },
+    {
+      "id": "extract-html-script-and-comments-isolation",
+      "result": "pass",
+      "evidence": "lib/extract.js:283-287,325-332 — probe <script>var s=\"<a href='/fake'>\";</script><a href=\"/real\"> yields only http://site.test/real; <!-- <a href=\"/commented\"> --> yields only the visible link"
+    },
+    {
+      "id": "extract-html-base-ordering",
+      "result": "fail",
+      "evidence": "lib/extract.js:274,334-341 — single pass applies <base> only to links after it: probe '<a href=\"before\"><base href=\"/sub/\"><a href=\"after\">' gives before='http://site.test/before', after='http://site.test/sub/after'. HTML applies the first <base href> document-wide, so 'before' should be http://site.test/sub/before; a second <base> also overrides the first instead of first-wins"
+    },
+    {
+      "id": "extract-html-srcset",
+      "result": "fail",
+      "evidence": "lib/extract.js:171-179 — naive split(','): probe srcset='https://cdn.test/a,b.png 1x, //cdn.test/c 2x' emits 'https://cdn.test/a' + 'http://site.test/b.png' + 'http://cdn.test/c'; srcset='data:image/png;base64,AAA 1x, /ok.png 2x' emits bogus 'http://site.test/AAA'. Data URIs and URLs containing commas are common; stage 3 would crawl bogus paths"
+    },
+    {
+      "id": "extract-html-entity-decoding",
+      "result": "pass",
+      "evidence": "lib/extract.js:19-39,67-74 — attrs.html '/a/?a=1&amp;b=2' resolves to 'http://site.test/a?a=1&b=2' (no '&amp;' remains); raw field keeps '/a/?a=1&amp;b=2'; numeric '&#x2f;api' decodes to '/api'"
+    },
+    {
+      "id": "extract-html-css",
+      "result": "pass",
+      "evidence": "lib/extract.js:100-169 — extractCss url(/u.png), @import '/i.css', @import url('/i2.css') resolve; data: rejected; duplicate bg.png deduped (tests/extract.test.js:130-149)"
+    },
+    {
+      "id": "extract-js-regex-and-escapes",
+      "result": "fail",
+      "evidence": "lib/extract.js:396-478 — scanner has no regex-literal state: 'var re = /<a href=\"([^\"]+)\"/g; var api = \"/api/v1/users\";' yields bogus 'http://site.test/g; var api =' and loses /api/v1/users; '/\\'/g' form does the same. '\\u002fapi\\u002fv1\\u002fusers' and '\\x2f...' are missed; '\"/api\\n/x\"' becomes '/apin/x' because the escape backslash is dropped and the escaped char copied literally"
+    },
+    {
+      "id": "extract-js-false-positive-basics",
+      "result": "pass",
+      "evidence": "lib/extract.js:389-394,480-510 — probes: '\"/\"' and '\"//\"' produce no links; comment URLs skipped (405-414); templates '/api/${id}/detail' -> /api, '/api/v1/${id}' -> /api/v1; minified one-liner extracts both paths; 'not-a-path' excluded"
+    },
+    {
+      "id": "extract-performance-no-redos",
+      "result": "pass",
+      "evidence": "linear scaling on '<a href=\"/x\">' x50k/100k/200k/400k = 160/290/554/1162 ms (bytes 0.9/1.8/3.6/7.2 MB); unquoted anchors 315/601/1102 ms; unclosed-quote tail 0.4/1.0 ms; 100k JS literals 224 ms. No catastrophic backtracking observed; the 385 ms 2 MB figure is linear per-tag overhead, under the 3 s probe limit"
+    },
+    {
+      "id": "rules-spec-table",
+      "result": "fail",
+      "evidence": "lib/rules.js:39-44 — spec §8 lists password\\s*[=:] but implementation requires a quoted value: scan('password=hunter2')=[], scan('DB_PASSWORD=hunter2')=[], scan('password: hunter2')=[], only scan('password=\"hunter2\"') matches. Divergence is not justified in code, worker reports, or tests; fixtures only use quoted values (flag.html:5, secrets.js:4), so the spec shape is untested"
+    },
+    {
+      "id": "rules-aws-key-boundaries",
+      "result": "pass",
+      "evidence": "lib/rules.js:25-30 — scan('AKIAIOSFODNN7EXAMPLE') matches; scan('AKIA1234567890ABCDEF') matches (exactly 16 chars after AKIA, so the prompt's 'too long' label is wrong); 17-char suffix 'AKIA1234567890ABCDEFG' does not match; lowercase and X-prefixed forms do not match"
+    },
+    {
+      "id": "rules-pem-variants",
+      "result": "pass",
+      "evidence": "lib/rules.js:31-37 — probes match '-----BEGIN OPENSSH PRIVATE KEY-----', '-----BEGIN PRIVATE KEY-----', '-----BEGIN EC PRIVATE KEY-----'; DSA/ENCRYPTED are outside the spec list"
+    },
+    {
+      "id": "rules-flags",
+      "result": "pass",
+      "evidence": "lib/rules.js:11-23 — flag{demo}/CTF{...} match; flag{} empty is ignored (reasonable); flag{a}b} matches flag{a}; body >200 chars is missed (flag_500=[]), which is a documented-length bound not in spec (low); case: flag lowercase only, ctf case-insensitive (matches spec wording)"
+    },
+    {
+      "id": "rules-stacktraces",
+      "result": "fail",
+      "evidence": "lib/rules.js:45-51 — Node 'at Object.<anonymous> (/app/x.js:1:1)' matches; Python 'Traceback (most recent call last)' and Java 'Exception in thread' headers match; but Java frame-only 'at com.x.Y.method(Y.java:12)' = [] and Python frame-only 'File \"/app/x.py\", line 3' = []; the regex requires :line:col. Test only uses :12:3 / :12:5 (tests/rules.test.js:96-97), not real Java :line"
+    },
+    {
+      "id": "rules-max-offsets-snippets",
+      "result": "pass",
+      "evidence": "lib/rules.js:69-90,109-157 — maxPerRule 2/1/0 works; offsets at 0 and EOF are correct code-unit indices; surrogate split handled (offset 135, snippet 44 chars); snippets single-line and <=200; findings sorted by offset"
+    },
+    {
+      "id": "fixture-honesty-nested",
+      "result": "pass",
+      "evidence": "tests/fixtures/html/nested.html:7 — absolute https 'https://site.test/a/../b' normalises to 'https://site.test/b'; preserving the absolute scheme is correct; the earlier brief's 'http://site.test/b' would have been wrong. Test comment and worker-2 note match the correct behavior — not a weakened fixture"
+    },
+    {
+      "id": "fixture-set-and-exactness",
+      "result": "fail",
+      "evidence": "tests/extract.test.js:63,92,114,137,157 use exact link counts for basic/nested/attrs/css/flag; but endpoints (181-197) only asserts inclusion, never a total and never /api/v3; missing JS fixtures cause t.skip (163-174), so deletion of endpoints.js/bundle.js does not fail the suite; no test asserts the 5+3 count (only verification.json does)"
+    },
+    {
+      "id": "cross-module-contract",
+      "result": "pass",
+      "evidence": "All sink.add calls pass norm.resolveUrl/normalizeUrl output (lib/extract.js:67-74,498,505,553,574), so links are canonical absolute; raw is preserved for labels (attrs.html '&amp;' raw), tag/attr distinguish link vs js-string vs css; paramKey returns 'param:<url>?<sorted names>' usable for param nodes. Notes: sink dedupes by URL only (cross-tag a/img metadata lost), video poster is labeled attr 'src' (line 363), out.base can be a trailing-slash directory form (not a node key)"
+    },
+    {
+      "id": "no-deps-no-scope-creep",
+      "result": "pass",
+      "evidence": "lib/norm.js, lib/extract.js, lib/rules.js require nothing; extract.js only requires ./norm (line 6); no fs/http/net/child_process, no eval/new Function; tests use node:test/node:assert/node:fs/node:path only"
+    },
+    {
+      "id": "test-integrity",
+      "result": "fail",
+      "evidence": "tests/extract.test.js:16-22 waitForFile sleeps 20 s x10 (up to 200 s per file) and collect missingFixtures that is never asserted; t.skip at 172 makes missing JS fixtures non-failing, unlike tests/db.test.js:17-19 'must fail loudly (not skip)'; endpoints test lacks exact-set assertion; no test covers unquoted password, Java :line frames, srcset commas/data URIs, or base ordering"
+    }
+  ],
+  "issues": {
+    "critical": [],
+    "high": [
+      "rules.js:39-44 — spec §8 rule password\\s*[=:] is narrowed to quoted values only. Probes: scan('password=hunter2')=[], scan('DB_PASSWORD=hunter2')=[], scan('password: hunter2')=[]; only quoted matches. Fixtures use only quoted forms (flag.html:5, secrets.js:4), so the miss is untested and unjustified; stage 3 triage will silently miss common config/env secrets. Add an unquoted-value rule (with a sane minimum value length) or document/test the narrowing."
+    ],
+    "medium": [
+      "extract.js:171-179 — srcset parser splits on every comma; URLs/data URIs containing commas produce bogus links: 'data:image/png;base64,AAA 1x' -> http://site.test/AAA, 'https://cdn.test/a,b.png' -> https://cdn.test/a + http://site.test/b.png. Implement spec-style srcset tokenisation (commas inside data: URLs; descriptor parsing).",
+      "extract.js:274,334-341 — <base> is applied only to later links and a later <base> overrides an earlier one. HTML applies the first <base href> to the whole document: probe '<a href=\"before\"><base href=\"/sub/\">' resolves before to /before instead of /sub/before. SPA/head links before <base> are mis-resolved.",
+      "extract.js:396-478 — JS scanner has no regex-literal state and drops escape semantics. Probe 'var re = /<a href=\"([^\"]+)\"/g; var api = \"/api/v1/users\";' emits 'http://site.test/g; var api =' and misses /api/v1/users; '\\u002f'/'\\x2f' paths are missed; '\"/api\\n/x\"' becomes '/apin/x'. Track regex literals (or at least quote-delimited regex bodies) and decode/retain escapes consistently.",
+      "rules.js:49 — stacktrace regex requires :line:col. Real Java 'at com.x.Y.method(Y.java:12)' and Python frame-only 'File \"/app/x.py\", line 3' produce no finding (header forms are caught). Add Java :line and Python File/line patterns; current test only exercises :12:3/:12:5.",
+      "norm.js:63-68,211 — userinfo is retained in keys ('GET https://u:p@h/x'), so the same resource with/without credentials gets different keys and credentials enter key/label. Strip userinfo or hash/exclude it from the canonical key (stage 3 uses keys for dedup and UI labels)."
+    ],
+    "low": [
+      "norm.js:39-43 — only ASCII letters are lowercased; 'HÖST.test' != 'höst.test' (test line 174 enshrines it); spec §4.1 says host lowercased. Trailing-dot host 'host.' is not canonicalised to 'host' (duplicate-node risk).",
+      "norm.js:146-187,354-376 — ';' is not treated as a query separator; '?=' yields an empty-name param '='; paramKey preserves duplicate names ('a&a') and emits 'param:<url>?' for an all-empty query. Decide whether these are intended aliases.",
+      "norm.js:263-341 — hand-rolled resolver diverges from URL parsing for backslashes and triple slashes: '///foo' -> null while browsers resolve to http://foo/; '\\\\foo\\bar' is treated as a relative path, not a protocol-relative host; backslashes are kept in paths. Low real-world frequency but a browser/parser mismatch.",
+      "extract.js:279-315,245-264 — a literal '<' in text can swallow the following tag (probe 'text 1 < 2 <a href=\"/ok\">' yields no link); form action=\"\" is skipped instead of resolving to the current URL; sink dedupes by URL only, so the second tag/attr for a URL is lost (a vs img metadata).",
+      "extract.js:181-190,317-323,513-558 — unclosed quote in CSS stops scanning subsequent url()s; text inside <title>/<textarea> can be parsed as links; malformed/truncated documents silently drop the remainder. Low false-negative/positive risk.",
+      "rules.js:11-23 — flag bodies >200 chars are missed (500-char probe = []); empty flag{} is ignored; FLAG{...} (uppercase) is not matched while CTF is case-insensitive. These bounds are reasonable but are not stated in spec/fixtures.",
+      "tests/extract.test.js:16-22,163-174 — missing JS fixtures skip rather than fail; 20 s sleeps can stall CI; missingFixtures is never asserted; endpoints fixture lacks exact count and /api/v3 assertion. Add a fixture-count test (5 HTML + 3 JS) and make missing fixtures fail loudly.",
+      "cross-module metadata — video poster is recorded with attr 'src' (extract.js:363), losing poster semantics; out.base may be a trailing-slash directory form and must not be used as a node key without normalizeUrl; MAX_LINKS=5000 truncation is silent (extract.js:8,53); scan() offsets beyond 4 MiB refer to a truncated string while bodies store full text (rules.js:105-107)."
+    ]
+  },
+  "file_sha256": {
+    "lib/norm.js": "2ada58311fa07cf938b4ed67bb81c668b512c6259455efdf7bf0d9ef6b8d2778",
+    "lib/extract.js": "0ac362301e51e3ba0cadebfd7bebddf342580201c0c20c4afed0b856b890794b",
+    "lib/rules.js": "dc7b43166d86d6198599319d8dee09f77ba080fa16f1fbc0f7aa58a11108e500",
+    "tests/norm.test.js": "8d9f4569e2a9c7762b3e9723fa5a9df26d3085ee6165da806ae9c22c8e4e1e4b",
+    "tests/extract.test.js": "f84a847a8a22087bf8b7222917d11f52c41036176f3463619ac60434ca08527f",
+    "tests/rules.test.js": "ca7f50a2ae9ce1340a531bfd04e06af35a019de1b4cf558e4f3fab97b1cba015",
+    "tests/fixtures/html/attrs.html": "05a64550bd2e5ef50562b548ea8fe3bda1dd1c6991f233bea21665d612d05d63",
+    "tests/fixtures/html/basic.html": "9afefd7e947cafe20aaff260dd67132661cb438c2c95abe835227b6f0c7d043a",
+    "tests/fixtures/html/css.html": "9cdf26223eaffe5d23e58642923cc0cda530421eefb33346e2252b43d749da03",
+    "tests/fixtures/html/flag.html": "904dd0756b4f45fd470d2e9af1a65d5a74e508db7c638dea8e3e86075991a1d9",
+    "tests/fixtures/html/nested.html": "127a88a63396425411892ce3fc41942754e56b04e28fe981ca6c22427a33c080",
+    "tests/fixtures/js/bundle.js": "e1a33c1bac0fd305877bfc7c56ff0131ba8addcf399e3d4b7ff12ed12486b68a",
+    "tests/fixtures/js/endpoints.js": "bf00dd08f0fcc08c15400b223427cf372c90da05ee75b5a291ddbec17a8dd9fe",
+    "tests/fixtures/js/secrets.js": "10ddcf925336e9a1c976bb1f693ec9b9743e3e850b9b723fb575eedfabe227f7",
+    ".crush/reports/stage-2/verification.json": "90dfd1192849086c739e1f0ac05bd68785cd3196fa25ae8bd0b97266eb8e9bc8",
+    ".crush/reports/stage-2/worker-1.json": "9d78036fb3acdbb913bbbc1d4345525b0797fa626556100169ebfae643b2719c",
+    ".crush/reports/stage-2/worker-2.json": "7be9883e1e293660c3d355f634b5b5ed8924bb31da9d830659903a6145f285b5",
+    ".crush/reports/stage-2/worker-3.json": "a69f8bf45e38564dfd5c6f93dfad375ec1ed7d176525aabd9a732546665a9c24"
+  },
+  "criterion_met": true,
+  "notes": "Stage-2 criterion is met: 53/53 tests pass, the 8 fixtures run, and the key pair collapses. Core is clean and dependency-free, performance is linear, entity decoding and script/comment isolation work, AWS/PEM/flag rules and maxPerRule/snippet bounds are sound. RETRY is driven by the high-severity spec gap in rules.js (password\\s*[=:] without quotes is missing and the fixtures only exercise quoted values) plus medium extractor defects: srcset comma/data-URI parsing, <base> ordering, JS regex-literal/escape handling, Java/Python stack frames, and userinfo in keys. The nested.html absolute-https expectation is correct, not a weakened fixture; the prompt's 'AKIA1234567890ABCDEF is too long' premise is wrong (it is exactly 16 chars after AKIA and matches)."
+}

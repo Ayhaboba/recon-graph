@@ -1,0 +1,32 @@
+{
+  "worker_id": "worker-3",
+  "stage": 2,
+  "status": "success",
+  "files_written": [
+    "tests/fixtures/js/endpoints.js",
+    "tests/fixtures/js/secrets.js",
+    "tests/fixtures/js/bundle.js",
+    "lib/rules.js",
+    "tests/rules.test.js"
+  ],
+  "node_test": {
+    "tests": 8,
+    "pass": 8,
+    "fail": 0,
+    "raw_tail": "1..8\n# tests 8\n# suites 0\n# pass 8\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 82.483294"
+  },
+  "commands": [
+    {
+      "cmd": "node --check lib/rules.js",
+      "exit": 0,
+      "tail": ""
+    },
+    {
+      "cmd": "node --test tests/rules.test.js",
+      "exit": 0,
+      "tail": "1..8\n# tests 8\n# suites 0\n# pass 8\n# fail 0\n# duration_ms 82.483294"
+    }
+  ],
+  "notes": "lib/rules.js: zero-dependency CommonJS, 7-rule extensible table (flag, ctf, aws-key, private-key, secret-assign, stacktrace, todo), 4 MiB UTF-8 prefix cap, per-rule maxPerRule default 200, offset-sorted deduped findings with single-line <=200-char snippets and surrogate-safe slicing. Fixtures match spec byte-for-byte. Flag.html fixture read from worker-2 shared tree; all 7 kinds found exactly once. No fixtures executed, no network.",
+  "blockers": []
+}

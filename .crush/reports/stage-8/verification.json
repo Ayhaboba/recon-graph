@@ -1,0 +1,63 @@
+{
+  "stage": 8,
+  "npm_test": { "exit": 1, "tests": 121, "pass": 120, "fail": 1 },
+  "npm_test_runs": [
+    { "run": 1, "exit": 0, "tests": 121, "pass": 121, "fail": 0 },
+    {
+      "run": 2,
+      "exit": 1,
+      "tests": 121,
+      "pass": 120,
+      "fail": 1,
+      "failing_test": "tests/client.test.js:608 positions survive a delta merge",
+      "message": "node moved 210.1 after delta merge (must be < 200)"
+    }
+  ],
+  "search_test": { "exit": 0, "tests": 6, "pass": 6, "fail": 0 },
+  "regex_guard_test": { "exit": 0, "tests": 4, "pass": 4, "fail": 0 },
+  "criterion": {
+    "fts_count": 130,
+    "chunks": 1,
+    "regex_count": 120,
+    "emphasis": true,
+    "virtual_rows": 24,
+    "no_limit": true
+  },
+  "engine_edit": {
+    "append_only": true,
+    "diff_minus_lines": 0,
+    "prefix_bytes_identical": 49819,
+    "original_sha": "53f22b6a827f7bdd503efdefd1b06ea03a5d2298d733a4d94624aa113315b51f",
+    "patched_sha": "7aae1bab53f0c75ad785f537d6afb17f33dd68ebe279fe1229648ed34a3b84d7",
+    "original_bytes": 49819,
+    "patched_bytes": 51836
+  },
+  "regex_guard": {
+    "engine": "worker_threads",
+    "unsafe_patterns": ["(a+)+$", "(a|aa)+$"],
+    "abort_ms": 2006,
+    "poller_gap_ms": 21,
+    "probe": {
+      "body_bytes": 4194304,
+      "stored_chars": 2097152,
+      "stored_tail": "!",
+      "pattern": "(a|aa)+$",
+      "error": "regex-timeout",
+      "partial": true,
+      "scanned": 1
+    }
+  },
+  "raw": [
+    "npm test run1: tests 121, pass 121, fail 0",
+    "npm test run2: tests 121, pass 120, fail 1 — tests/client.test.js:608 positions survive a delta merge, node moved 210.1 (must be < 200)",
+    "node --test tests/search.test.js: tests 6, pass 6, fail 0",
+    "node --test tests/regex-guard.test.js: tests 4, pass 4, fail 0",
+    "probe .close-redos-probe.js: body_bytes=4194304 stored_chars=2097152 stored_tail='!' pattern=(a|aa)+$ -> error=regex-timeout partial=true scanned=1 abort_ms=2006 poller_gap_ms=21",
+    "sha256sum: patched 7aae1bab...84d7 (51836 B), original 53f22b6a...b51f (49819 B); cmp -n 49819 = identical; diff removed lines = 0",
+    "node --check lib/search.js lib/stream.js web/vendor/graph-view.js: SYNTAX_OK",
+    "retained stage-8 probes: fts needle count=130 chunks=1; regex zeta count=120 chunks=1; bad regex '([' -> bad-regex; progress frames=3 max gap=1006 ms; virtualization viewport=300 top=0 ROW_HEIGHT=22 OVERSCAN=10 -> rendered rows=24"
+  ],
+  "failures": [
+    "npm test run 2: tests/client.test.js:608 'positions survive a delta merge' — node moved 210.1 (threshold < 200); run 1 passed 121/121"
+  ]
+}

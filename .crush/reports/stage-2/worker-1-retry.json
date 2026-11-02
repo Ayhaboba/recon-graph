@@ -1,0 +1,38 @@
+{
+  "worker_id": "worker-1",
+  "stage": 2,
+  "retry": 1,
+  "status": "success",
+  "files_written": [
+    "/home/erema/recon-graph/lib/norm.js",
+    "/home/erema/recon-graph/tests/norm.test.js",
+    "/home/erema/recon-graph/.crush/plan.json"
+  ],
+  "node_test": {
+    "command": "node --test tests/norm.test.js",
+    "tests": 18,
+    "pass": 18,
+    "fail": 0,
+    "skipped": 0
+  },
+  "probes": {
+    "key_userinfo": "GET https://h.test/x",
+    "unicode_host_eq": true,
+    "trailing_dot": "https://host/x",
+    "origin_userinfo": "https://h.test",
+    "host_userinfo": "h.test",
+    "param_key_userinfo": "param:https://h.test/x?a",
+    "ipv6_default_port": "http://[::1]/x",
+    "ipv6_keep_port": "http://[::1]:8080/x",
+    "criterion_pair": true,
+    "full_suite": "57 tests, 57 pass, 0 fail"
+  },
+  "commands": [
+    "node --check lib/norm.js",
+    "node --test tests/norm.test.js",
+    "npm test",
+    "node -e probes (userinfo/unicode/trailing-dot/paramKey)"
+  ],
+  "notes": "Fix 1: splitAuthority now parses userinfo only to discard it; canonical output is <scheme>://<host>[:port]<path>[?<query>], so key/originOf/hostOf/paramKey are credential-free. Fix 2: host uses toLowerCase() (Unicode-aware); scheme still ASCII-only via asciiLower. Fix 3: exactly one trailing dot stripped from non-bracketed hosts; IPv6 literal untouched. Existing test 13 expectation updated from ASCII-only 'hÖst.test' to 'höst.test' because it enshrined the reviewed bug; all other 13 existing tests unchanged and passing. Added 4 tests (15-18). Criterion pair preserved: key('//host/a?b=2&a=1') === key('https://host/a?a=1&b=2').",
+  "blockers": []
+}

@@ -1,0 +1,78 @@
+{
+  "worker_id": "worker-1",
+  "stage": 1,
+  "retry": 1,
+  "status": "success",
+  "files_written": [
+    "lib/migrate.js",
+    "package.json",
+    ".crush/plan.json",
+    ".crush/state/deviations.md",
+    ".crush/reports/stage-1/worker-1-retry.json"
+  ],
+  "probes": {
+    "rev_seq": {
+      "table_created": true,
+      "initial_value": 0,
+      "after_two_nodes": [{"key": "a", "rev": 1}, {"key": "b", "rev": 2}],
+      "edge_insert_rev": 5,
+      "node_revs_after_degree_bump": [{"key": "a", "rev": 3}, {"key": "b", "rev": 4}],
+      "node_insert_after_edge_rev": [{"key": "c", "rev": 6}],
+      "seq_value": 6,
+      "strictly_increasing_across_nodes_and_edges": true
+    },
+    "fts_orphans": 0,
+    "fts_search_after_node_delete": 0,
+    "triggers": 9,
+    "trigger_names": [
+      "edges_degree_delete",
+      "edges_degree_insert",
+      "edges_rev_insert",
+      "fts_docs_ad",
+      "fts_docs_ai",
+      "fts_docs_au",
+      "nodes_ad",
+      "nodes_rev_insert",
+      "nodes_rev_update"
+    ],
+    "withTransaction": {
+      "exported": true,
+      "type": "function",
+      "nested_inner_rollback_kept_outer_row": true,
+      "outer_rollback_removed_row": true,
+      "depth_after": 0,
+      "isTransaction_after": false,
+      "applyMigrations_inside_open_tx": {"from": 1, "to": 1, "applied": []}
+    },
+    "migrations": {"fresh": {"from": 0, "to": 1, "applied": [1]}, "second_run": {"from": 1, "to": 1, "applied": []}}
+  },
+  "commands": [
+    {
+      "cmd": "node --check lib/migrate.js",
+      "exit": 0,
+      "tail": "syntax ok"
+    },
+    {
+      "cmd": "node -e '<verify probe: PRAGMAS, applyMigrations, rev_seq, triggers, H2 rev ordering, M3 fts orphan>'",
+      "exit": 0,
+      "tail": "apply1 {\"from\":0,\"to\":1,\"applied\":[1]}; has_withTransaction function; seqMonotonic value=6; nodeRevs a=1,b=2; edgeRev=5; afterNodeRevs a=3,b=4,c=6; ftsOrphans c=0"
+    },
+    {
+      "cmd": "node -e '<extra probe: fts delete, nested savepoints, applyMigrations in tx>'",
+      "exit": 0,
+      "tail": "searchBefore c=1; searchAfterDelete c=0; ftsRowsAfterDelete c=0; innerError boom; afterNested ['outer']; afterOuterRollback c=0; depthAfter 0 isTransaction false; applyInsideTx {\"from\":1,\"to\":1,\"applied\":[]}"
+    },
+    {
+      "cmd": "node lib/db.js --self-test",
+      "exit": 0,
+      "tail": "SUMMARY pass=12 fail=0"
+    },
+    {
+      "cmd": "npm test",
+      "exit": 0,
+      "tail": "tests 10; pass 10; fail 0"
+    }
+  ],
+  "notes": "H2 fixed: all rev allocation goes through rev_seq(id=1,value) as one monotonic sequence shared by nodes and edges; probe shows nodes 1,2 -> edge 5 (degree bumps raised node revs 3,4 first) -> next node 6, seq=6. nodes_rev_update still fires only on type,status,degree,attrs_json (rev excluded from column list, no recursion). M3 fixed with nodes_ad AFTER DELETE ON nodes; deleting a node removed its fts_docs row and search returned 0. M4 fixed: withTransaction exported, BEGIN IMMEDIATE at depth 0, SAVEPOINT sp_N when nested, rollback on throw incl. COMMIT failure, depth tracked via WeakMap + db.__txDepth with db.isTransaction fallback. applyMigrations now uses withTransaction and sets user_version inside the same transaction, so it tolerates an already-open transaction. Schema otherwise unchanged; 13 tables (7 base + fts_docs + node_fts + 4 FTS shadow + rev_seq) and 9 triggers. L2/L3 fixed in package.json (test glob, engines >=22.5).",
+  "blockers": []
+}

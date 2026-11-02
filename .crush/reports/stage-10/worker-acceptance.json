@@ -1,0 +1,26 @@
+{
+  "stage": 10,
+  "acceptance": [
+    "PASS install: npm install ok",
+    "PASS scan: exit 0, nodes 22, edges 26, fuzz_hits 5",
+    "PASS server: index 200, sim 200, api_scans true",
+    "PASS browser: ready true, nodes 22, console_errors 0, exceptions 0",
+    "PASS search: true",
+    "PASS inspector: true",
+    "PASS panel: true",
+    "PASS resume: SIGINT exit 130, status stopped, inflight 0; resume status done, pending 0",
+    "PASS console: console_errors 0"
+  ],
+  "measured": {
+    "npm_test": "117/117",
+    "scan_nodes": "22 (19 depending on fuzz)",
+    "scan_edges": 26,
+    "fuzz_hits": 5,
+    "console_errors": 0,
+    "exceptions": 0,
+    "sigint_exit": 130,
+    "resume_exit": 0,
+    "resume_pending": 0
+  },
+  "result": "pass"
+}

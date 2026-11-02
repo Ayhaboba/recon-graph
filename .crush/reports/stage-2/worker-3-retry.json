@@ -1,0 +1,37 @@
+{
+  "worker_id": "worker-3",
+  "stage": 2,
+  "retry": 1,
+  "status": "success",
+  "files_written": [
+    "lib/rules.js",
+    "tests/rules.test.js",
+    "tests/fixtures/js/secrets.js",
+    "tests/fixtures/js/bundle.js"
+  ],
+  "node_test": {
+    "tests": 10,
+    "pass": 10,
+    "fail": 0,
+    "raw_tail": "1..10\n# tests 10\n# suites 0\n# pass 10\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 108.976443"
+  },
+  "commands": [
+    {
+      "cmd": "node --check lib/rules.js",
+      "exit": 0,
+      "tail": ""
+    },
+    {
+      "cmd": "node --test tests/rules.test.js",
+      "exit": 0,
+      "tail": "1..10\n# tests 10\n# pass 10\n# fail 0\n# duration_ms 108.976443"
+    },
+    {
+      "cmd": "node --test tests/*.test.js",
+      "exit": 0,
+      "tail": "1..65\n# tests 65\n# pass 65\n# fail 0\n# duration_ms 138.116443"
+    }
+  ],
+  "notes": "FIX 1: secret-assign now matches quoted (>=3 chars) and unquoted (>=4 chars from [A-Za-z0-9_.+/\\-]) values for password/passwd/secret/token/api[_-]?key/apikey/access[_-]?key; names are case-insensitive via explicit character classes so the optional UPPER_SNAKE env prefix stays case-sensitive: DB_PASSWORD=hunter2 matches, user_password=\"x\" and passwordField=\"x\" do not; quoted values shorter than 3 chars are rejected. FIX 2: stacktrace rule keeps Node /path:line:col, Traceback header and Exception in thread, and adds Java frame-only 'at pkg.Class.method(File.java:line)' and Python frame-only 'File \"path\", line N' (plain and backslash-escaped quotes). A header immediately followed by frame lines is one finding, so flag.html (Traceback header + File line) still yields exactly one stacktrace. FIX 3: secrets.js and bundle.js replaced byte-for-byte per brief; endpoints.js untouched (sha256 bf00dd08f0fcc08c15400b223427cf372c90da05ee75b5a291ddbec17a8dd9fe). FIX 4: tests assert sorted rule id lists and exact counts (secrets.js 7 findings with 3 secret-assign; bundle.js 5 findings with 3 stacktrace; flag.html 7 ids once each, 3x5s retry then fail), plus unquoted-secret probes, stack frame variants, extended false-positive set, snippet bounds, maxPerRule caps, empty/huge input. Full suite 65/65 green; no dependencies added.",
+  "blockers": []
+}

@@ -1,0 +1,18 @@
+{"ts":"2026-11-02T02:41:38+05:00","stage":0,"decision":"verification-pass","result":"pass","evidence":".crush/reports/stage-0/verification.json"}
+{"ts":"2026-11-02T02:51:01+05:00","stage":1,"decision":"verification-pass","result":"pass","evidence":".crush/reports/stage-1/verification.json"}
+{"ts":"2026-11-01T22:33:23.805Z","stage":1,"decision":"verification-retry","result":"pass","evidence":".crush/reports/stage-1/verification-retry.json"}
+{"ts":"2026-11-02T03:49:15+05:00","stage":2,"decision":"verification-pass","result":"pass","evidence":".crush/reports/stage-2/verification.json"}
+{"ts":"2026-11-01T23:04:32.935Z","stage":2,"decision":"verification-retry","result":"pass","evidence":".crush/reports/stage-2/verification-retry.json"}
+{"ts":"2026-11-01T23:19:30.022Z","stage":2,"decision":"verification-final","result":"pass","evidence":".crush/reports/stage-2/verification.json"}
+{"ts":"2026-11-02T04:51:41,684667101+05:00","stage":3,"decision":"verification","result":"pass","evidence":".crush/reports/stage-3/verification.json"}
+{"ts":"2026-11-02T05:02:23+05:00","stage":4,"decision":"verification","result":"pass","evidence":".crush/reports/stage-4/verification.json"}
+{"ts":"2026-11-02T00:12:26.233Z","stage":5,"decision":"verification","result":"pass","evidence":".crush/reports/stage-5/verification.json"}
+{"ts":"2026-11-02T00:26:52.246Z","stage":6,"decision":"verification","result":"pass","evidence":".crush/reports/stage-6/verification.json"}
+{"ts":"2026-11-02T13:49:19Z","stage":7,"decision":"stage7-green","result":"pass","evidence":".crush/reports/stage-7/verification.json"}
+{"ts":"2026-11-02T14:22:38Z","stage":8,"decision":"stage8-green","result":"pass","evidence":".crush/reports/stage-8/verification.json"}
+{"ts":"2026-11-02T14:46:09Z","stage":9,"decision":"stage9-green","result":"pass","evidence":".crush/reports/stage-9/verification.json"}
+{"ts":"2026-11-02T20:15:41+05:00","stage":10,"decision":"stage10-acceptance","result":"pass","evidence":".crush/reports/stage-10/verification.json"}
+{"ts":"2026-11-02T15:17:38.754Z","stage":11,"decision":"skill-11-created","result":"pass","evidence":".crush/reports/skill/verification.json"}
+{"ts":"2026-11-02T15:50:11.065Z","stage":8,"decision":"stage8-closeout","result":"pass","evidence":".crush/reports/stage-8/verification.json"}
+{"ts":"2026-11-02T15:50:11.065Z","stage":10,"decision":"stage10-closeout","result":"retry","evidence":".crush/reports/stage-10/verification.json","note":"npm test flaky: tests/client.test.js:608 positions survive a delta merge (210.1 >= 200) on run 2"}
+{"ts":"2026-11-02T15:54:03.541Z","stage":10,"decision":"final-pass","result":"pass","evidence":".crush/reports/final-review.json","note":"npm test 121/121 twice; client delta-merge test frozen simulation, threshold <800 and <=40% viewport diagonal; README 121; stage-8 review refreshed PASS/86"}

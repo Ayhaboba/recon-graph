@@ -1,0 +1,36 @@
+{
+  "worker_id": "worker-3",
+  "stage": 7,
+  "timestamp": "2026-11-02T13:55:00Z",
+  "status": "success",
+  "focus_area": "stage7_verification_manual_criterion",
+  "files": [
+    ".crush/reports/stage-7/verification.json"
+  ],
+  "commands": [
+    "npm test",
+    "node --test tests/inspector.test.js",
+    "node .probe-tmp/stage7-manual.js"
+  ],
+  "numbers": {
+    "npm_test_exit": 0,
+    "npm_tests": 104,
+    "npm_pass": 104,
+    "inspector_tests": 6,
+    "inspector_pass": 6,
+    "scan_nodes": 21,
+    "local_nodes": 7,
+    "refetch_rev_before": 94,
+    "refetch_rev_after": 111,
+    "delta_frames": 1
+  },
+  "proof": {
+    "node_payload": "panel contains url, status 200, body preview 218 chars, rules [\"flag\",\"todo\"]",
+    "headers": "content-type row: application/json; charset=utf-8",
+    "curl": "curl -sS -D- '<url>' -H 'User-Agent: recon-graph/1.0'",
+    "refetch": "rev 94 -> 111, delta frame received",
+    "subgraph": "global 21 -> local 7 -> restored 21, #graph-back visible"
+  },
+  "known_issues": [],
+  "recommendations": []
+}

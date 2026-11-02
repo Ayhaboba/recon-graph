@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recon Graph</title>
+<link rel="stylesheet" href="vendor/graph.css">
+<link rel="stylesheet" href="app.css">
+<link rel="stylesheet" href="panel.css">
+</head>
+<body>
+
+<header id="topbar">
+  <label class="lbl" for="scan-select">scan</label>
+  <select id="scan-select"></select>
+  <input id="search" type="search" placeholder="search nodes… (stage 8)" autocomplete="off" spellcheck="false">
+  <select id="search-mode" title="search mode">
+    <option value="fts">fts</option>
+    <option value="regex">regex</option>
+  </select>
+  <div id="search-badge">0 matches</div>
+  <section id="search-panel">
+    <div id="search-results">
+      <div id="search-spacer"></div>
+      <div id="search-rows"></div>
+    </div>
+  </section>
+  <div id="status">starting…</div>
+</header>
+
+<main id="stage">
+  <div class="graph-view" id="graph"></div>
+</main>
+
+<aside id="panel" aria-label="settings and inspector"></aside>
+
+<div id="error" style="display:none"></div>
+
+<script src="vendor/pixi.min.js"></script>
+<script src="vendor/shims.js"></script>
+<script src="vendor/graph-view.js"></script>
+<script>
+/* PIXI 7.2.4 UMD leaks a global `Tl`; web/vendor/shims.js defines a different `Tl`.
+ * Both must keep working, so the wrapped function dispatches on arity:
+ *   2+ args -> PIXI spread helper: define/copy the property and return the target.
+ *   1 arg   -> the shims display helper captured before the override. */
+var shimTl = window.Tl;
+window.Tl = function (target, key, value) {
+  if (arguments.length >= 2) {
+    if (key in target) Object.defineProperty(target, key, { enumerable: true, configurable: true, writable: true, value: value });
+    else target[key] = value;
+    return target;
+  }
+  return shimTl(target);
+};
+</script>
+<script src="recon.js"></script>
+<script src="search.js"></script>
+<script src="panel.js"></script>
+
+</body>
+</html>

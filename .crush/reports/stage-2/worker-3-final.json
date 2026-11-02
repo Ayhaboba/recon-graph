@@ -1,0 +1,41 @@
+{
+  "worker_id": "worker-3",
+  "stage": 2,
+  "retry": 2,
+  "status": "success",
+  "files_written": [
+    "lib/rules.js",
+    "tests/rules.test.js",
+    ".crush/reports/stage-2/worker-3-final.json"
+  ],
+  "node_test": {
+    "tests": 13,
+    "pass": 13,
+    "fail": 0,
+    "raw_tail": "1..13\n# tests 13\n# suites 0\n# pass 13\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 105.1805"
+  },
+  "commands": [
+    {
+      "cmd": "node --check lib/rules.js",
+      "exit": 0,
+      "tail": "CHECK_OK"
+    },
+    {
+      "cmd": "node --test tests/rules.test.js",
+      "exit": 0,
+      "tail": "1..13\n# tests 13\n# pass 13\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 105.1805"
+    },
+    {
+      "cmd": "node --test tests/*.test.js",
+      "exit": 0,
+      "tail": "1..68\n# tests 68\n# pass 68\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 134.248239"
+    },
+    {
+      "cmd": "node -e \"probe scan() on JSON / JS object literal / config-like keys\"",
+      "exit": 0,
+      "tail": "{\"token\": \"abcdef\"} secret-assign | {\"password\": \"hunter2\"} secret-assign | token: \"abcdef\" secret-assign | max_tokens: 4096 - | secretCount=3 - | api_key_id=abc - | user_password=\"x\" -"
+    }
+  ],
+  "notes": "HIGH fix: lib/rules.js SECRET_ASSIGN_SOURCE now allows an optional closing quote between the word-bounded name and the separator: (?:SECRET_NAME)\\b[\"']?\\s*[:=]\\s*(...). Serialized configs now match: {\"token\": \"abcdef\"}, {\"password\": \"hunter2\"}, {\"api_key\": \"abcd\"}, token: \"abcdef\", password: \"hunter2\" each yield exactly one secret-assign high finding. Word boundaries preserved, so user_password=\"x\", passwordField=\"x\", tokenizer, max_tokens: 4096, secretCount=3 and api_key_id=abc still yield zero secret-assign findings (max_tokens and api_key_id fail the \\b because '_' is a word char; user_password fails the (?<![A-Za-z0-9_]) lookbehind). Added three tests to tests/rules.test.js: 'quoted json keys are detected', 'js object literal keys are detected', 'config-like keys are not false positives' (asserts no finding with rule secret-assign, not merely zero findings). Existing coverage intact: secrets.js 7 findings with 3 secret-assign, bundle.js 5 findings with 3 stacktrace, flag.html all seven rule kinds once each. Full suite now 68/68 green.",
+  "blockers": []
+}

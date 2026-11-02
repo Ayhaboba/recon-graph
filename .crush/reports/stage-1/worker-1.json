@@ -1,0 +1,27 @@
+{
+  "worker_id": "worker-1",
+  "stage": 1,
+  "status": "success",
+  "files_written": ["lib/migrate.js", ".crush/plan.json"],
+  "sqlite_invocation": "node",
+  "objects": {"tables": 12, "triggers": 8, "indexes": 12},
+  "commands": [
+    {
+      "cmd": "node --check lib/migrate.js",
+      "exit": 0,
+      "tail": "(no output, syntax OK)"
+    },
+    {
+      "cmd": "node -e \"... require('node:sqlite'); applyMigrations twice; dump sqlite_master\"",
+      "exit": 0,
+      "tail": "apply1 {\"from\":0,\"to\":1,\"applied\":[1]}; apply2 {\"from\":1,\"to\":1,\"applied\":[]}; version {\"user_version\":1}; objects 32; tables=12 (7 base + node_fts + 4 fts5 shadow), triggers=8, indexes=12 (9 named + 3 autoindex); fts5 c=1. node:sqlite works WITHOUT any experimental CLI flag on Node v22.23.3 (only an ExperimentalWarning is printed)."
+    },
+    {
+      "cmd": "node -e \"... integration smoke: 1 scan, 3 nodes, 2 edges, fts_docs insert/match/update/delete, duplicate node key\"",
+      "exit": 0,
+      "tail": "shared node degree=2; rev on label-only update unchanged=true; rev on status update 7->8; duplicate key blocked: UNIQUE constraint failed: nodes.scan_id, nodes.key; node count=3; degree after edge delete: node1=1 node2=0 node3=1; FTS MATCH 'needle' hit rowid 1, after UPDATE old term gone/new term found, after DELETE count=0"
+    }
+  ],
+  "notes": "8 triggers created exactly per spec: nodes_rev_insert, nodes_rev_update, edges_rev_insert, edges_degree_insert, edges_degree_delete, fts_docs_ai, fts_docs_ad, fts_docs_au. FTS5 external-content sync verified end-to-end (insert/update/delete). applyMigrations is idempotent and refuses downgrade when user_version > SCHEMA_VERSION. Migration up() joins a caller-opened transaction when db.isTransaction is available, otherwise opens its own; PRAGMA user_version set to the literal migration.version after commit. No other files touched.",
+  "blockers": []
+}

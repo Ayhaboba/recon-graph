@@ -1,0 +1,24 @@
+Recon Graph
+Copyright (c) 2026 Recon Graph contributors
+
+Third-party and vendored code
+-----------------------------
+
+The files below in web/vendor/ originate from the project owner's Obsidian
+graph-view extraction (/home/erema/obsidian-graph):
+
+  web/vendor/graph-view.js
+  web/vendor/shims.js
+  web/vendor/sim.js
+  web/vendor/graph.css
+
+They are vendored verbatim, with exactly one documented append-only edit:
+Renderer.prototype.setEmphasis appended to web/vendor/graph-view.js.
+See VENDOR.md for source paths, sha256 hashes (original and patched),
+byte sizes and the exact edit description.
+
+  web/vendor/pixi.min.js
+
+PIXI.js, Copyright (c) PixiJS contributors, licensed under the MIT License.
+
+See VENDOR.md for hashes and provenance details.

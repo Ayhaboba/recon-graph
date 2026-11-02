@@ -1,0 +1,95 @@
+{
+  "worker_id": "worker-2",
+  "stage": 2,
+  "retry": 2,
+  "status": "success",
+  "files_written": [
+    "lib/extract.js",
+    "tests/extract.test.js",
+    ".crush/reports/stage-2/worker-2-final.json"
+  ],
+  "node_test": {
+    "extract": {
+      "command": "node --test tests/extract.test.js",
+      "tests": 20,
+      "pass": 20,
+      "fail": 0,
+      "skipped": 0
+    },
+    "suite": {
+      "command": "npm test",
+      "tests": 72,
+      "pass": 72,
+      "fail": 0,
+      "skipped": 0
+    }
+  },
+  "commands": [
+    {
+      "cmd": "node --check lib/extract.js",
+      "exit": 0
+    },
+    {
+      "cmd": "node --test tests/extract.test.js",
+      "exit": 0,
+      "tail": "1..20\n# tests 20\n# pass 20\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0"
+    },
+    {
+      "cmd": "npm test",
+      "exit": 0,
+      "tail": "# tests 72\n# pass 72\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0"
+    }
+  ],
+  "fixes": [
+    {
+      "id": "MED-base-unquoted-trailing-slash",
+      "file": "lib/extract.js",
+      "change": "Added splitSelfClosing(rest): a trailing '/' in the raw tag body is treated as the self-closing marker only when preceded by whitespace or a closing quote. Both firstBaseHref and extractHtml now use it instead of unconditionally stripping rest.endsWith('/'). Unquoted attribute values keep their final '/'; parseAttrs therefore sees '/sub/' and directoryBase preserves the directory for later links.",
+      "evidence": {
+        "<base href=/sub/><a href=after>": {
+          "base": "http://site.test/sub/",
+          "links": ["http://site.test/sub/after"]
+        },
+        "<base href=/sub/><a href=/x/>": {
+          "base": "http://site.test/sub/",
+          "links": ["http://site.test/x"]
+        },
+        "<base href=/sub/ ><a href=after>": {
+          "base": "http://site.test/sub/",
+          "links": ["http://site.test/sub/after"]
+        },
+        "<base href=/sub /><a href=after>": {
+          "base": "http://site.test/sub",
+          "links": ["http://site.test/after"]
+        },
+        "quoted <base href=\"/sub/\">": {
+          "base": "http://site.test/sub/",
+          "links": ["http://site.test/sub/after"]
+        }
+      }
+    },
+    {
+      "id": "MED-js-postfix-and-statement-regex",
+      "file": "lib/extract.js",
+      "change": "Reworked stringLiterals into a small tokenizer: lastToken tracking (property names after '.' are not keywords), a paren stack recording whether '(' followed if/while/for/with (condition) and whether it opens a for(...) header, postfix/prefix ++/-- that does not flip expectOperand, contextual 'of' only inside for headers, and the matching ')' of a condition sets expectOperand=true so a following '/' starts a regex literal.",
+      "evidence": {
+        "var b=a++ / 2; var api=\"/api/v1/real\";": ["http://site.test/api/v1/real"],
+        "var b=a-- / 2; var api=\"/api/v1/real\";": ["http://site.test/api/v1/real"],
+        "var of=1; of / 2; var api=\"/api/v1/real\";": ["http://site.test/api/v1/real"],
+        "x.return / 2; var api=\"/api/v1/real\";": ["http://site.test/api/v1/real"],
+        "if (x) /\"\\/api\\/v1\\/fake\"/.test(y); var api=\"/api/v1/real\";": ["http://site.test/api/v1/real"],
+        "while/for/with variants": ["http://site.test/api/v1/real"],
+        "10 / 2 / 5; \"/api/v1/users\"": ["http://site.test/api/v1/users"],
+        "10 /= 2 and a /= 2": ["http://site.test/api/v1/users"]
+      }
+    }
+  ],
+  "tests_added": [
+    "unquoted attribute keeps a trailing slash",
+    "postfix increment then division keeps later links",
+    "contextual keyword before division keeps later links",
+    "regex in statement position after if is not a link"
+  ],
+  "notes": "FIX 1 covers every unquoted attribute extractor because both tag scans now share splitSelfClosing; <base> was the only observable failure. FIX 2 also locks the reviewer-cited 'of / 2' and 'x.return / 2' regressions in the contextual-keyword test. Existing coverage stays green: basic 13, nested 6, attrs 5, css 4, flag 1, srcset cases, base first-wins, extractJs exact endpoints set and bundle set. Only lib/extract.js and tests/extract.test.js were modified.",
+  "blockers": []
+}

@@ -1,0 +1,89 @@
+{
+  "worker_id": "worker-2",
+  "stage": 8,
+  "part": 2,
+  "timestamp": "2026-11-02T13:57:08.374Z",
+  "status": "success",
+  "focus_area": "server_search_ws",
+  "files": [
+    "lib/search.js (new)",
+    "lib/stream.js"
+  ],
+  "protocol": {
+    "count_frame": "search",
+    "chunk_frame": "searchChunk",
+    "chunk_size": 5000,
+    "seq_echo": true,
+    "no_limit_fts": true,
+    "bad_regex_code": "bad-regex"
+  },
+  "probe": {
+    "fts_count": 1,
+    "chunks": 1,
+    "regex_count": 1,
+    "bad_regex_code": "bad-regex",
+    "after_error_usable": true,
+    "nolimit_count": 6000,
+    "nolimit_chunks": 2,
+    "nolimit_sum": 6000
+  },
+  "tests": {
+    "command": "npm test",
+    "tests": 104,
+    "pass": 104,
+    "fail": 0
+  },
+  "checks": {
+    "node_check": true,
+    "fts": true,
+    "regex": true,
+    "no_limit": true,
+    "empty_q_zero": true,
+    "temp_handle_closed": true,
+    "chunks_yield_setImmediate": true
+  },
+  "definition_of_done": {
+    "tests_exist": true,
+    "tests_passing": true,
+    "implementation_matches_plan": true,
+    "no_todo_comments": true,
+    "all_file_changes_real": true
+  },
+  "probe_dir_removed": true,
+  "repair": {
+    "measured_at": "2026-11-02T14:54:55.379Z",
+    "npm_test": {
+      "exit": 0,
+      "tests": 117,
+      "pass": 117,
+      "fail": 0
+    },
+    "search_test": {
+      "exit": 0,
+      "tests": 6,
+      "pass": 6,
+      "fail": 0
+    },
+    "criterion": {
+      "fts_count": 130,
+      "chunks": 1,
+      "regex_count": 120,
+      "emphasis": true,
+      "virtual_rows": 24,
+      "no_limit": true
+    },
+    "engine_edit": {
+      "append_only": true,
+      "diff_minus_lines": 0,
+      "original_sha": "53f22b6a827f7bdd503efdefd1b06ea03a5d2298d733a4d94624aa113315b51f",
+      "patched_sha": "7aae1bab53f0c75ad785f537d6afb17f33dd68ebe279fe1229648ed34a3b84d7",
+      "original_bytes": 49819,
+      "patched_bytes": 51836
+    },
+    "regex_guard": {
+      "unsafe": "regex-unsafe",
+      "abort_ms": 1.586,
+      "poller_gap_ms": 1006
+    }
+  }
+}

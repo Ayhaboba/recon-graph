@@ -1,0 +1,100 @@
+{
+  "worker_id": "worker-2",
+  "stage": 4,
+  "status": "completed",
+  "focus_area": "scanner_stage4_wiring",
+  "owned_files": ["bin/scanner.js", "lists/common.txt"],
+  "completed_work": [
+    "bin/scanner.js: after a successful crawl (fresh scan or --resume), when --wordlist is set, the scanner loads lib/fuzz.js (retrying every 20s up to 10x while the parallel worker finishes), reads the wordlist file, parseWordlist()s it, derives up to 200 distinct parent-directory URLs from crawled nodes with status 200..399 and type in ('page','endpoint'), calls createFuzzer({db, scanId, target, options:{wordlist, dirs, concurrency, delay, timeout}, request: undefined}).run(), prints `[scanner] fuzz: tested=<n> hits=<h> soft=<s> err=<e>`, and stores the numbers under stats_json.fuzz.",
+    "bin/scanner.js: --resume now parses scans.options_json as the option base and only overrides fields explicitly present in argv (explicit map tracked during parseArgs). Stored/merged options cover maxDepth, concurrency, perHost, delay, timeout, scope, ignoreRobots, headers, wordlist, maxBodyBytes, maxRedirects. Prints `[scanner] resume options: depth=<n> scope=<s> wordlist=<path|none>`.",
+    "bin/scanner.js: added --max-body-bytes and --max-redirects CLI flags so every crawler-facing option can be stored/overridden; new scans persist maxBodyBytes/maxRedirects in options_json.",
+    "bin/scanner.js: exported mergeResumeOptions, collectFuzzDirs, directoryOf for tests.",
+    "lists/common.txt: 49-line curated default wordlist (47 entries after comments/blank lines) including admin, login, backup.zip, backup, api/, api/v1/, robots.txt, sitemap.xml, config, .git/config, .env, uploads/, static/, assets/, test/, dev/, old/, wp-admin/, phpinfo.php, server-status, debug, metrics, swagger.json, openapi.json and .bak/.old variants.",
+    "package.json intentionally untouched."
+  ],
+  "tasks": [
+    {
+      "id": "s4-w2-1",
+      "description": "--wordlist actually fuzzes after crawl/resume and stats include fuzz numbers",
+      "status": "completed"
+    },
+    {
+      "id": "s4-w2-2",
+      "description": "resume reuses scans.options_json; explicit CLI flags override",
+      "status": "completed"
+    },
+    {
+      "id": "s4-w2-3",
+      "description": "lists/common.txt curated default wordlist",
+      "status": "completed"
+    }
+  ],
+  "commands": [
+    {
+      "cmd": "node --check bin/scanner.js",
+      "result": "ok"
+    },
+    {
+      "cmd": "node bin/scanner.js --help | head -25",
+      "result": "ok; --wordlist described as fuzzing, --max-body-bytes/--max-redirects listed"
+    },
+    {
+      "cmd": "wc -l lists/common.txt",
+      "result": "49 lines (47 entries)"
+    },
+    {
+      "cmd": "npm test",
+      "result": "79/79 pass"
+    },
+    {
+      "cmd": "node tests/site/server.js --port 0 then scanner with --max-depth 2 --wordlist lists/common.txt",
+      "result": "exit 0; fuzz: tested=188 hits=4 soft=184 err=0"
+    },
+    {
+      "cmd": "node bin/scanner.js --resume 1 --data-dir <temp> (no flags)",
+      "result": "exit 0; printed `resume options: depth=2 scope=same-origin wordlist=/home/erema/recon-graph/lists/common.txt`"
+    }
+  ],
+  "probe_results": {
+    "resume_options": true,
+    "resume_probe": {
+      "started_with": "--max-depth 2 --wordlist lists/common.txt",
+      "resumed_with": "no explicit flags",
+      "printed_depth": 2,
+      "printed_scope": "same-origin",
+      "printed_wordlist": "/home/erema/recon-graph/lists/common.txt",
+      "refuzzed_on_resume": true
+    },
+    "wordlist_line_count": 49,
+    "wordlist_entry_count": 47,
+    "fuzz_e2e": {
+      "tested": 188,
+      "hits": 4,
+      "softSkips": 184,
+      "errors": 0
+    },
+    "stats_json_shape": {
+      "nodes": 18,
+      "edges": 22,
+      "pending": 0,
+      "done": 11,
+      "err": 0,
+      "fuzz": {
+        "tested": 188,
+        "hits": 4,
+        "softSkips": 184,
+        "errors": 0
+      }
+    },
+    "scan_exit_codes": {
+      "fresh": 0,
+      "resume": 0
+    }
+  },
+  "errors": [],
+  "notes": [
+    "lib/fuzz.js landed from worker-1 during this task; contract matches (parseWordlist accepts string or array, createFuzzer returns {run}, run result keys tested/hits/softSkips/errors).",
+    "Fuzz only runs when the crawl was not stopped; SIGINT during fuzz is observed afterwards and the scan is finalized as stopped with exit 130.",
+    "The report dir .crush/reports/stage-4/ was created by this worker."
+  ]
+}

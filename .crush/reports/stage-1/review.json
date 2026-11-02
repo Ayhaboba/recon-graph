@@ -1,0 +1,280 @@
+{
+  "stage": 1,
+  "reviewer": "worker-agent (read-only stand-in; reviewer-agent endpoint down)",
+  "verdict": "RETRY",
+  "score": 62,
+  "checks": [
+    {
+      "id": "1-schema-fidelity",
+      "result": "pass",
+      "evidence": "lib/migrate.js:53-151 — CORE_SCHEMA matches spec §5. scans 53-63; nodes 65-81 with UNIQUE(scan_id,key) at 80 and indexes 82-84; edges 86-95 with FK ON DELETE CASCADE at 88-90, UNIQUE(scan_id,src,dst,kind) at 94, indexes 96-98; bodies 100-111 with node_id PK FK CASCADE at 101 and bodies_sha 111; fts_docs 113-119; node_fts 120-124 content='fts_docs', content_rowid='node_id', tokenize='unicode61 remove_diacritics 2', prefix='2 3'; findings 126-136; queue 138-151 with UNIQUE(scan_id,url,kind). Runtime probe: PRAGMA foreign_keys=1, journal_mode=wal, user_version=1; sqlite_master has 12 tables (7 base + fts_docs + node_fts + 4 FTS shadow), 8 triggers, 9 named indexes (bodies_sha, edges_scan_dst/rev/src, findings_scan_rule, nodes_scan_rev/status/type, queue_state)."
+    },
+    {
+      "id": "2-trigger-semantics",
+      "result": "pass",
+      "evidence": "lib/migrate.js:155-204 — exactly 8 triggers. nodes_rev_insert 155-159; nodes_rev_update 161-165 'AFTER UPDATE OF type, status, degree, attrs_json' (rev not in the column list; probe raw 'UPDATE nodes SET rev=rev' left rev 5->5, no recursion); edges_rev_insert 167-171; edges_degree_insert 173-178 'degree = degree + 1' for NEW.src and NEW.dst; edges_degree_delete 180-185 'degree = degree - 1' for OLD.src and OLD.dst; fts_docs_ai 187-191; fts_docs_ad 193-197; fts_docs_au 199-204 ('delete' with OLD.* then insert NEW.*). Probe: deleting a node cascaded its edge, survivor degree 1->0 and rev bumped; fts_docs UPDATE alpha->beta gave alpha=0/beta=1; fts_docs DELETE gave alpha=0/beta=0."
+    },
+    {
+      "id": "3-fts-truncation",
+      "result": "fail",
+      "evidence": "Declaration is correct at lib/migrate.js:120-124, but truncation violates spec §5 line 199 ('Тела > 2 МБ в индекс не идут'). lib/db.js:314-319 does 'if (text.length > FTS_TEXT_CAP) { text = text.slice(0, FTS_TEXT_CAP); ftsTruncated = 1; }' and lib/db.js:345-352 inserts that truncated text into fts_docs. Probe: input body 2,748,588 bytes => bodies.text length 2,097,152, fts_truncated=1, fts_docs.body length 2,097,152, search('NEEDLEHEAD')=1 hit; a token after byte 2 MiB gives 0 hits. An oversized body therefore DOES enter node_fts, contrary to spec."
+    },
+    {
+      "id": "4-search-no-limit",
+      "result": "pass",
+      "evidence": "lib/db.js:361-374: 'const limit = Number(options.limit) || 0; ... if (limit > 0) { sql += \" LIMIT ?\"; params.push(limit); }'. At limit 0 no LIMIT clause is emitted, not 'LIMIT -1'. Probe captured SQL: default tail 'WHERE node_fts MATCH ? AND d.scan_id = ?' hasLimit=false; limit=5 tail '... AND d.scan_id = ? LIMIT ?' hasLimit=true. tests/db.test.js:229-247 asserts 60/60 unlimited and 5 limited."
+    },
+    {
+      "id": "5-upsert-idempotency",
+      "result": "fail",
+      "evidence": "No-op guard exists at lib/db.js:247-259, and probe identical re-upsert kept rev 15->15. But lib/db.js:254 compares 'existing.attrs_json !== values.attrs_json' as raw strings: probe {a:1,b:2} then {b:2,a:1} bumped rev 15->16. Also lib/db.js:209-217 maps omitted label/url/method/status/depth to null and attrs to '{}', and lib/db.js:261-274 writes every column: probe node {label:'A',url:'https://attrs.test/x',status:200,depth:1,attrs:{a:1,b:2}} re-upserted with only {key,type,origin} became label=null, url=null, status=null, depth=null, attrs_json='{}', rev 16->17. Key-order stability and partial-merge semantics both fail."
+    },
+    {
+      "id": "6-apply-migrations",
+      "result": "pass",
+      "evidence": "lib/migrate.js:220-226 reads 'PRAGMA user_version'; 228-235 throws when from > SCHEMA_VERSION; 238-264 loops MIGRATIONS, 241-259 wraps each step in BEGIN/COMMIT/ROLLBACK; 262 interpolates only the literal integer migration.version. Probe: fresh => {from:0,to:1,applied:[1]}; second => {from:1,to:1,applied:[]}; user_version=99 => 'schema version 99 is newer than supported 1'. tests/db.test.js:120-139 covers idempotency. Caveat: user_version is set after COMMIT (262), so a crash between commit and version bump re-runs idempotent DDL; acceptable but noted."
+    },
+    {
+      "id": "7-selftest-integrity",
+      "result": "pass",
+      "evidence": "lib/db.js:489-499 check() records ok:false on throw; 722-725 computes 'const fail = results.length - pass; return fail === 0;'; 736-745 does 'process.exit(ok ? 0 : 1)' and the catch sets ok=false. Forced-failure probe 'TMPDIR=/nonexistent-recon-review node lib/db.js --self-test' printed 11 FAIL lines plus 'PASS cleanup', 'SUMMARY pass=1 fail=11', exit 1. Normal run: 12 PASS, exit 0. It cannot print PASS and exit 0 when a check failed."
+    },
+    {
+      "id": "8-tests-integrity",
+      "result": "fail",
+      "evidence": "tests/db.test.js:270 'assert.equal(dbApi.search(db, scanId, \"needle-at-tail\").length, 0);' searches a token that never existed in the body (tail is 'needle-at-end'), so the assertion can never fail meaningfully. tests/db.test.js:249-271 does assert bodies.text length 2 MiB and fts_truncated=1 (probe confirms truncation really activates: 2 MiB+100 input -> 2 MiB text, flag 1), but never asserts the spec requirement that an oversized body is absent from node_fts; the suite therefore passes on H1. Shared single DB is isolated per test scan; no ordering hazard observed; 'node --test tests/db.test.js' 10/10 and 'node --test' 10/10. Missing coverage: fts_docs UPDATE/DELETE, delta edge-after-cursor, attrs key order, partial upsert, stats inflight."
+    },
+    {
+      "id": "9-scope-and-trigger-ownership",
+      "result": "pass",
+      "evidence": "lib/db.js:262-274 UPDATE sets only type,label,url,method,status,depth,attrs_json; no rev or degree write. Grep across lib shows only lib/migrate.js:158,164,170,176,177,183,184 writes rev/degree (trigger SQL). lib/db.js contains no HTTP/crawl/fetch implementation (only literal origin:'crawl' strings). Stage-1 source delta is lib/migrate.js, lib/db.js, tests/db.test.js. delta/stats/search are forward-looking db-layer helpers but add no crawler/server code."
+    },
+    {
+      "id": "10-api-shape-risks",
+      "result": "fail",
+      "evidence": "lib/db.js:392-414 delta() filters both tables by one 'afterRev' but computes cursor.rev as max(node.rev, edge.rev). Probe with 5 nodes + 2 edges: firstCursor=12; then a new edge got rev=3; delta(12) returned secondNodes=2, secondEdges=0, secondCursor=14 — the edge is lost. No exported transaction helper (withTransaction is private at lib/migrate.js:18; exports at 269); upsertNode/addEdge/putBody re-prepare SQL per call and upsertNode does SELECT+write (lib/db.js:195-301), i.e. N+1 for stage-3 200-row batches. openDb (lib/db.js:103-145) has no read-only mode and always runs PRAGMAs plus applyMigrations, so the stage-5 read-only server cannot use it as-is. stats (lib/db.js:436-457) counts state='running' while spec §8 uses 'inflight', and omits done/err required by spec §6 line 229."
+    }
+  ],
+  "issues": {
+    "critical": [],
+    "high": [
+      {
+        "id": "H1",
+        "file": "lib/db.js:314-319,345-352",
+        "severity": "high",
+        "title": "Oversized bodies are truncated and indexed into FTS instead of being excluded",
+        "evidence": "lib/db.js:316-319 slices text to 2 MiB and sets fts_truncated=1; lib/db.js:345-352 then inserts the truncated text into fts_docs, whose AFTER INSERT/UPDATE triggers mirror it into node_fts. Probe: 2,748,588-byte body produced bodies.text=2,097,152, fts_truncated=1, fts_docs.body=2,097,152, and search('NEEDLEHEAD')=1 hit for a token in the first 2 MiB.",
+        "impact": "Direct violation of spec §5 line 199. Searches return snippets from content that was supposed to be out of the index, and the separate file-pass path is not the only search path.",
+        "fix": "When Buffer.byteLength(text,'utf8') > cap: set fts_truncated=1 but do not index the body (insert fts_docs with body=NULL, or skip the fts_docs row); keep full/processed text out of node_fts. Add a test that a token inside an oversized body yields 0 FTS hits."
+      },
+      {
+        "id": "H2",
+        "file": "lib/db.js:392-414; lib/migrate.js:158,164,170",
+        "severity": "high",
+        "title": "delta() cursor collides across independent nodes/edges rev counters",
+        "evidence": "Nodes rev comes from 'MAX(rev) FROM nodes' and edges rev from 'MAX(rev) FROM edges' (migrate.js:158,164,170), then delta returns cursor=max(node.rev,edge.rev) and filters both tables with 'rev > afterRev' (db.js:397-414). Probe: 5 nodes + 2 edges gave cursor 12; a new edge got rev 3; delta(12) returned 2 nodes and 0 edges, and the new edge remains invisible until the edge counter exceeds 12.",
+        "impact": "Stage-5 250 ms polling silently drops newly inserted edges and any edge/degree changes whose rev is below the node counter. Clients never receive those edges; the graph stays incomplete without an error.",
+        "fix": "Use one monotonic revision sequence per scan/database (a shared rev table or a per-scan sequence), or return separate cursors {nodeRev, edgeRev}. Add a test that inserts an edge after polling a node-only cursor. Run the two delta SELECTs in one read transaction for a consistent snapshot."
+      }
+    ],
+    "medium": [
+      {
+        "id": "M1",
+        "file": "lib/db.js:209-217,247-254,261-274",
+        "severity": "medium",
+        "title": "Partial upsert wipes previously known node fields with NULL/'{}'",
+        "evidence": "Omitted label/url/method/status/depth become null and attrs becomes '{}' (db.js:209-217); the UPDATE then writes all columns (db.js:261-274). Probe: a node with label 'A', url, status 200, depth 1, attrs {a:1,b:2} re-upserted with only {key,type,origin} ended with every field null and attrs_json '{}', rev bumped 16->17.",
+        "impact": "A re-seen URL discovered via a link (without a full payload) destroys status/label/url/depth/attrs and creates a delta. Stage 3 must either always pass a full node or this must be fixed.",
+        "fix": "Treat undefined as 'keep existing' and null as 'set null'; build a dynamic SET list containing only fields that changed. Add a partial-upsert test."
+      },
+      {
+        "id": "M2",
+        "file": "lib/db.js:254",
+        "severity": "medium",
+        "title": "attrs_json compared as a raw string; key order causes spurious rev bumps",
+        "evidence": "db.js:254 'existing.attrs_json !== values.attrs_json'. Probe: {a:1,b:2} then {b:2,a:1} compared unequal and bumped rev 15->16 even though the logical attrs are identical.",
+        "impact": "Re-serialized attrs with different insertion order create delta noise and defeat the 'no UPDATE when nothing changed' guarantee for attr-carrying nodes.",
+        "fix": "Canonicalize attrs (sort keys recursively) before JSON.stringify, or compare a stable hash; add a key-order test."
+      },
+      {
+        "id": "M3",
+        "file": "lib/migrate.js:113-119; lib/db.js:345-352",
+        "severity": "medium",
+        "title": "fts_docs has no FK/cleanup; node deletion leaves orphan FTS rows",
+        "evidence": "fts_docs.node_id is 'INTEGER PRIMARY KEY' without REFERENCES nodes(id); no DELETE trigger on nodes removes fts_docs. Probe: after 'DELETE FROM nodes WHERE id=?', bodies rows=0 (cascade works) but fts_docs rows=1 and search('gamma') still returned the dead nodeId.",
+        "impact": "Stage-4/5 search and inspector can receive hits for nonexistent nodes. The spec §5 table also omits the FK, so this is an inherited spec gap, but the implementation should not make it worse.",
+        "fix": "Add REFERENCES nodes(id) ON DELETE CASCADE to fts_docs plus an explicit cleanup trigger that issues the FTS5 'delete' command for the old row before removing fts_docs; add a node-delete search test."
+      },
+      {
+        "id": "M4",
+        "file": "lib/migrate.js:18,269; lib/db.js:195-301",
+        "severity": "medium",
+        "title": "No exported transaction helper; per-call prepare and N+1 upsert",
+        "evidence": "withTransaction is private to migrate.js (defined 18-50, exports 269). upsertNode prepares SELECT (219-221), then INSERT (224-229) or UPDATE (261-264); addEdge prepares per call (293-297); putBody prepares two statements (328-341, 345-352). No bulk API exists.",
+        "impact": "Stage-3 batches of 200 nodes/edges in one transaction must hand-roll BEGIN/COMMIT through db.raw and pay ~400 prepares + 200 SELECTs per batch; stage-5 250 ms delta polling also re-prepares two statements every tick.",
+        "fix": "Export withTransaction, cache prepared statements on the db wrapper, and add bulk upsertNodes/addEdges that use one transaction and one prepared statement per SQL shape."
+      },
+      {
+        "id": "M5",
+        "file": "lib/db.js:436-457",
+        "severity": "medium",
+        "title": "stats() uses queue state 'running' instead of spec 'inflight' and omits done/err",
+        "evidence": "db.js:446-452 counts 'state = \"running\"' and returns {nodes,edges,byType,pending,running}; spec §8 line 316 defines pending -> inflight -> done|skip|err, and spec §6 line 229 expects stats {pending,inflight,done,err,...}. Probe: one queue row state='inflight', one 'pending' => stats returned pending=1, running=0.",
+        "impact": "Stage-5 progress always reports inflight=missing/0 and cannot report done/err; clients that follow the protocol see wrong progress.",
+        "fix": "Count state='inflight' and add done/err counts (and keep scan status separate); add a stats test with inflight/done/err rows."
+      },
+      {
+        "id": "M6",
+        "file": "lib/db.js:103-145",
+        "severity": "medium",
+        "title": "openDb() is writer-only: no read-only mode, always runs PRAGMAs and migrations",
+        "evidence": "openDb creates DatabaseSync(absolute) (117), executes every PRAGMA (124-131), and calls migrate.applyMigrations(raw) (133). There is no {readOnly:true} option or separate read-only opener. Spec §3 line 30 and §8 line 306 require bin/server.js to be read-only and never write the scan DB.",
+        "impact": "The stage-5 server cannot safely open a scan with openDb: it may run DDL/user_version updates on a new or old DB and journal_mode pragmas. It must bypass openDb or a read-only path must be added.",
+        "fix": "Add openReadOnly(filePath) that opens SQLITE_OPEN_READONLY, skips migrations and write PRAGMAs (or runs only busy_timeout), and expose query helpers for it; test that no write occurs."
+      },
+      {
+        "id": "M7",
+        "file": "lib/db.js:376-382",
+        "severity": "medium",
+        "title": "search() swallows every SQLite error and returns []",
+        "evidence": "db.js:377-381 'try { rows = raw.prepare(sql).all(...params); } catch (_err) { return []; }'",
+        "impact": "Corrupt FTS index, schema drift, or a SQL bug is indistinguishable from 'no results', masking stage-4/8 search regressions.",
+        "fix": "Catch only FTS syntax errors (SQLITE_ERROR whose message contains 'fts5'/'syntax'), rethrow everything else; add a malformed-query test and a forced-error test."
+      }
+    ],
+    "low": [
+      {
+        "id": "L1",
+        "file": "tests/db.test.js:270,249-271",
+        "severity": "low",
+        "title": "Dead assertion and truncation test encode implementation, not spec",
+        "evidence": "Line 270 searches 'needle-at-tail', which never exists in the body. Lines 249-271 assert bodies.text length and fts_truncated but not absence from node_fts; the suite passes on H1.",
+        "fix": "Delete/replace line 270; assert search returns 0 for a token in an oversized body and that node_fts has no body row for it; add fts_docs UPDATE/DELETE and delta edge-after-cursor tests."
+      },
+      {
+        "id": "L2",
+        "file": "package.json:7-9",
+        "severity": "low",
+        "title": "No canonical test script; 'node --test tests/' exits 1 on Node 22.23.3",
+        "evidence": "package.json scripts contain only start/smoke. Reproduced: 'node --test tests/' and 'node --test tests' both exit 1 with 'Cannot find module /home/erema/recon-graph/tests'; 'node --test tests/db.test.js' and 'node --test' (no args) pass 10/10. This is an invocation/tooling gap, not a db failure.",
+        "fix": "Add \"test\": \"node --test tests/*.test.js\" (or \"node --test\") in stage 1 or at latest stage 2; document the command in README. The verification artifact's failure is not a stage-1 functional blocker."
+      },
+      {
+        "id": "L3",
+        "file": "package.json:6; lib/db.js:29-56",
+        "severity": "low",
+        "title": "engines >=18 is inconsistent with node:sqlite; no better-sqlite3 fallback",
+        "evidence": "package.json:6 says node >=18, but node:sqlite is available from Node 22.5+; loadSqlite only re-execs with --experimental-sqlite and does not implement the spec §8 'при недоступности — better-sqlite3' fallback. On Node 18 db.js fails, and tests/db.test.js skips the whole suite.",
+        "fix": "Set engines to >=22.5 (or >=22) and/or implement a better-sqlite3 adapter. Do not leave a silent skip path as the only fallback."
+      },
+      {
+        "id": "L4",
+        "file": "lib/db.js:23,314-319",
+        "severity": "low",
+        "title": "FTS cap measured in UTF-16 code units, not bytes",
+        "evidence": "FTS_TEXT_CAP = 2*1024*1024 and the guard uses text.length; a body over 2 MiB in UTF-8 can have length below the cap for multibyte text.",
+        "fix": "Use Buffer.byteLength(text, 'utf8') > FTS_TEXT_CAP for the guard (and decide whether the stored bodies.text cap is bytes or characters)."
+      },
+      {
+        "id": "L5",
+        "file": "lib/db.js:124-131",
+        "severity": "low",
+        "title": "All PRAGMA failures are swallowed, including foreign_keys=ON",
+        "evidence": "The catch around raw.exec(String(pragma)) is unconditional; only journal_mode=WAL is known to fail on :memory:.",
+        "impact": "A failed foreign_keys=ON would silently disable cascades and degree/rev expectations.",
+        "fix": "Swallow only known journal_mode/synchronous failures; assert PRAGMA foreign_keys=1 and busy_timeout=5000 after setup."
+      },
+      {
+        "id": "L6",
+        "file": "lib/db.js:261-274; lib/migrate.js:161-165",
+        "severity": "low",
+        "title": "Label/url/method/depth-only changes bump rev because the UPDATE names type,status,attrs_json",
+        "evidence": "The UPDATE SET list always includes type,status,attrs_json; SQLite fires 'AFTER UPDATE OF' when a column is named in SET even if its value is unchanged. Probe: upsert with only label A->B bumped rev 18->19; a raw 'UPDATE nodes SET label=?' left rev 19->19.",
+        "impact": "Extra delta traffic for label/url/depth-only changes; not a correctness failure, but undermines the trigger's intentional column list.",
+        "fix": "Build a dynamic SET list from actually changed fields so only the intended trigger columns are named; keep the no-op guard."
+      },
+      {
+        "id": "L7",
+        "file": "lib/migrate.js:241-262",
+        "severity": "low",
+        "title": "user_version is set after COMMIT; applyMigrations cannot join an already-open transaction",
+        "evidence": "db.exec('COMMIT') at 247, then db.exec('PRAGMA user_version = ' + version) at 262. If db.isTransaction is true (caller already in a transaction), 241-244 still issues an unconditional BEGIN and throws.",
+        "impact": "Crash between commit and version bump re-runs idempotent DDL (acceptable); nested-transaction callers fail unexpectedly (low).",
+        "fix": "Set user_version inside the same transaction where possible, or document that applyMigrations requires no open transaction; make the outer BEGIN conditional on !db.isTransaction."
+      },
+      {
+        "id": "L8",
+        "file": "lib/db.js:287-301",
+        "severity": "low",
+        "title": "addEdge accepts cross-scan endpoints and INSERT OR IGNORE hides bad rows",
+        "evidence": "addEdge(scanId, srcId, dstId, kind) does not verify that src/dst nodes belong to scanId; INSERT OR IGNORE returns false for UNIQUE and also for NOT NULL violations, without an error.",
+        "impact": "A caller bug can link nodes from different scans or silently drop malformed edges; stage-3 batching needs clear errors.",
+        "fix": "Validate src/dst scan_id in addEdge (or use a composite FK), use plain INSERT with ON CONFLICT(scan_id,src,dst,kind) DO NOTHING, and return the edge id when inserted."
+      },
+      {
+        "id": "L9",
+        "file": "lib/db.js:328-352",
+        "severity": "low",
+        "title": "putBody writes bodies and fts_docs without one transaction",
+        "evidence": "bodies upsert (328-341) and fts_docs upsert (345-352) are separate statements; an FTS trigger failure leaves bodies updated but the index stale.",
+        "impact": "Partial body/index state after an error; stage-3 retries may not repair it.",
+        "fix": "Wrap both statements in withTransaction (once exported) and add a failure-injection test."
+      },
+      {
+        "id": "L10",
+        "file": "lib/db.js:392-414; lib/migrate.js:180-185",
+        "severity": "low",
+        "title": "No deletion tombstones for delta; edge DELETE does not bump edge rev",
+        "evidence": "delta only selects rows with rev > cursor; edges have no rev update on DELETE, and nodes/edges have no deleted flag or tombstone table. Deleted entities simply disappear from the DB and from future deltas.",
+        "impact": "Stage-5 clients cannot learn about node/edge removal (if stage 3/7 ever deletes); the current stage-1 self-test deletes an edge and relies only on degree changes.",
+        "fix": "Decide whether stage 5 needs tombstones; if yes add a per-scan revision log/tombstone table or a deleted_at column and include deletions in delta."
+      },
+      {
+        "id": "L11",
+        "file": "lib/db.js:363-389",
+        "severity": "low",
+        "title": "Search hit shape lacks the spec's 'rule' field; snippet only from body column",
+        "evidence": "Returns {nodeId,url,title,snippet}; spec §6 line 230 shows {nodeId,snippet,rule}. snippet(node_fts,2,...) uses only body, so a title/url-only match has no highlighted body fragment.",
+        "impact": "Stage-4/8 search UI cannot label artifact hits by rule without an extra findings lookup; title-only matches may show an empty snippet.",
+        "fix": "Join findings for artifact hits to populate rule (or document the stage-4 mapping); use a snippet column fallback for title/url matches."
+      },
+      {
+        "id": "L12",
+        "file": "tests/db.test.js:13-29",
+        "severity": "low",
+        "title": "Whole db suite silently skips when node:sqlite is unavailable",
+        "evidence": "On require failure the file emits test('db suite (skipped)', {skip: skipReason}) and exits 0; CI on an unsupported Node would be green with zero db coverage.",
+        "impact": "False green in environments where the experimental module is absent; combined with engines >=18 this is easy to hit.",
+        "fix": "Fail (not skip) when the project's declared engine cannot provide the driver, or make the better-sqlite3 fallback the skip replacement."
+      },
+      {
+        "id": "L13",
+        "file": ".crush/reports/stage-1/worker-1.json:25; .crush/reports/stage-1/verification.json:26-35",
+        "severity": "low",
+        "title": "Report claim about label-only rev and verification duplicate_key_rev_bumped are imprecise",
+        "evidence": "worker-1 says 'rev on label-only update unchanged=true'; true for raw SQL (probe 19->19) but upsertNode label-only bumps (18->19) because of L6. verification's criterion says duplicate_key_rev_bumped with dup_rev 4->8; an identical re-upsert probe keeps rev stable, so that field likely measured a non-identical update and should not be read as a no-op result.",
+        "impact": "Next-stage readers can misinterpret the intended idempotency guarantee; no code change required.",
+        "fix": "Clarify the report wording and record the exact duplicate-upsert payload in verification; keep the self-test's identical re-upsert assertion as the source of truth."
+      }
+    ]
+  },
+  "recommendations": [
+    "Fix H1 first: oversized bodies must not enter node_fts; keep fts_truncated=1 and add a test that a token inside a >2 MiB body returns 0 FTS hits (file-pass search is the separate path).",
+    "Fix H2 before stage 5: use a single monotonic revision sequence per scan/database or separate {nodeRev,edgeRev} cursors, and add an edge-after-cursor delta test; run the two delta SELECTs in one read transaction.",
+    "Fix upsert semantics: undefined means 'keep existing', null means 'set null'; build a dynamic SET list of changed fields; canonicalize attrs before comparison; add partial-upsert and key-order tests.",
+    "Add fts_docs cleanup: REFERENCES nodes(id) ON DELETE CASCADE plus an explicit FTS5 delete trigger on node removal, and test that search returns 0 after node deletion.",
+    "Export withTransaction, cache prepared statements, and add bulk upsertNodes/addEdges for stage 3 (200 rows in one transaction); add a read-only open path for the stage-5 server that skips migrations and write PRAGMAs.",
+    "Make stats match spec §6/§8: count state='inflight' (not 'running') and return done/err alongside pending/nodes/edges; add a stats test with inflight/done/err rows.",
+    "Harden search(): catch only FTS syntax errors, rethrow other SQLite failures; populate rule for finding hits and handle title/url-only snippets.",
+    "Add missing tests: fts_docs UPDATE/DELETE, delta edge-after-cursor, attrs key order, partial upsert, stats inflight, node-delete FTS cleanup, migration downgrade; remove the dead 'needle-at-tail' assertion.",
+    "Add package.json \"test\": \"node --test tests/*.test.js\" (or \"node --test\") and fix engines to >=22.5 or implement the better-sqlite3 fallback; do this in stage 1 if trivial, otherwise no later than stage 2.",
+    "Node 22.23.3 ExperimentalWarning: nothing depends on its absence; stderr warning is cosmetic, self-test exits 0 and tests pass. Keep the guard/re-exec fallback and document the experimental status."
+  ],
+  "file_sha256": {
+    "lib/db.js": "cf90006b9039b9b4b6521a1f2be7675526f9c4ae0b2b094185d70fbd3b2532d9",
+    "lib/migrate.js": "f3f938c8ac656b4eb14450736a1dbdb6f83cfab76bd7425a43430a98b03e4d06",
+    "tests/db.test.js": "25f5317c1888d45db0ee97b2ee46754c194b07e16b6569f3cc437c21d5b09151"
+  },
+  "criterion_met": true,
+  "notes": "Stage-1 criterion verified independently: node lib/db.js --self-test => 12 PASS, exit 0 (scan created, 3 nodes, 2 edges, FTS finds 'delta', degree A=1/B=2/C=1 where the shared node B has degree 2, duplicate key returns the same id and node count stays 3). node --test tests/db.test.js => 10/10, exit 0. Schema and all 8 triggers match spec §5 exactly; FTS update/delete external-content sync works; duplicate edge does not double-increment degree; identical re-upsert does not bump rev. Forced self-test failure (TMPDIR invalid) printed PASS only for cleanup but exited 1, so the PASS accounting is honest. Verdict is RETRY because two high issues exist in shipped code: H1 (explicit spec §5 truncation violation, reproduced: token in first 2 MiB of a 2.75 MB body is searchable) and H2 (delta cursor collision, reproduced: new edge rev 3 is lost behind node cursor 12). The verification.json 'node --test tests/' exit 1 is an invocation/tooling gap, not a db failure: Node 22.23.3 cannot take a directory positional, while 'node --test' and 'node --test tests/db.test.js' both pass 10/10; add a package test script in stage 1 if trivial, otherwise stage 2. The node:sqlite ExperimentalWarning has no dependent behavior. No project source file was modified, created or deleted; hashes above are the state reviewed."
+}

@@ -1,0 +1,30 @@
+{
+  "worker_id": "worker-2",
+  "stage": 0,
+  "status": "success",
+  "files_written": ["web/index.html"],
+  "commands": [
+    {
+      "cmd": "node -e \"var s=require('fs').readFileSync('web/index.html','utf8'); ['vendor/pixi.min.js','vendor/shims.js','vendor/graph-view.js','vendor/sim.js'].forEach(function(f){ if(s.indexOf(f)<0) throw new Error('missing '+f); }); if(s.indexOf('GraphData')>=0||s.indexOf('GraphSettings')>=0) throw new Error('references clean-room modules'); console.log('OK html refs');\"",
+      "exit": 0,
+      "tail": "OK html refs"
+    },
+    {
+      "cmd": "grep -n 'script src=' web/index.html",
+      "exit": 0,
+      "tail": "50:<script src=\"vendor/pixi.min.js\"></script>\n51:<script src=\"vendor/shims.js\"></script>\n52:<script src=\"vendor/graph-view.js\"></script>"
+    },
+    {
+      "cmd": "node -e \"...parse DEMO_NODES from web/index.html, count nodes/links, check dangling links...\"",
+      "exit": 0,
+      "tail": "nodes=9 links=10\nOK demo graph"
+    },
+    {
+      "cmd": "timeout 30s chromium --headless=new --no-sandbox --disable-gpu --allow-file-access-from-files --virtual-time-budget=4000 --dump-dom \"file:///home/erema/recon-graph/web/index.html\"",
+      "exit": 0,
+      "tail": "<div id=\"status\">ready · nodes 9 · links 10 · worker wait</div>\n<div id=\"error\" style=\"display:none\"></div>"
+    }
+  ],
+  "notes": "demo dataset 9 nodes / 10 links; worker passed explicitly as vendor/sim.js; Tl dual-signature guard copied verbatim; headless boot reached ready state with empty error overlay",
+  "blockers": []
+}

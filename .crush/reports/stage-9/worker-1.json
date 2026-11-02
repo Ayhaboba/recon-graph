@@ -1,0 +1,144 @@
+{
+  "worker_id": "worker-1",
+  "stage": "9",
+  "timestamp": "2026-11-02T14:34:06.317387+00:00",
+  "focus_area": "settings_panel_recon_filters",
+  "scope_owned": [
+    "web/panel.js",
+    "web/panel.css",
+    "web/recon.js (filter API only)"
+  ],
+  "files_created": [
+    "web/panel.js",
+    "web/panel.css"
+  ],
+  "files_modified": [
+    "web/recon.js"
+  ],
+  "files_deleted": [
+    ".probe-tmp/ (throwaway CDP probe)"
+  ],
+  "recon_api": {
+    "added": [
+      "window.__recon.setFilter(filter)",
+      "window.__recon.getFilter()",
+      "window.__recon.setRenderOptions(opts)",
+      "window.__recon.setForces(opts)",
+      "window.__recon.filterCounts()",
+      "window.__recon.setGroupColors(colors)"
+    ],
+    "setFilter_shape": {
+      "types": {
+        "page": true,
+        "endpoint": true,
+        "asset": true,
+        "artifact": true,
+        "unresolved": true,
+        "param": true
+      },
+      "status": {
+        "ok": true,
+        "redirect": true,
+        "clientErr": true,
+        "serverErr": true,
+        "unknown": true
+      },
+      "origin": {
+        "crawl": true,
+        "fuzz": true
+      }
+    },
+    "dataset_builder": "buildDataset(predicate) filters local maps; links only when both endpoints visible; engine setData merges by id (surviving positions preserved)",
+    "ingest_untouched": true,
+    "origin_note": "wire node records currently omit origin; originBucket() treats missing as crawl and fuzz when origin==='fuzz'. No lib/** change."
+  },
+  "panel": {
+    "script": "classic IIFE, window.__panel = {show, hide, state}",
+    "sections": [
+      "Filters",
+      "Display",
+      "Forces",
+      "Groups"
+    ],
+    "filters": [
+      "types x6",
+      "status x5",
+      "origin x2",
+      "reset",
+      "per-type/status/origin counts"
+    ],
+    "display": [
+      "node size 0.1-5",
+      "link thickness 0.1-5",
+      "text fade -3..3 (engine option names)"
+    ],
+    "forces": [
+      "center 0-1",
+      "repel 0-20",
+      "link 0-1",
+      "link distance 30-500",
+      "reset"
+    ],
+    "groups": [
+      "6 colour swatches",
+      "6 visibility toggles synced with type filters"
+    ],
+    "persistence": "localStorage recon.panel.v1",
+    "untrusted_data": "textContent only"
+  },
+  "panel_css": {
+    "forked_from": "/home/erema/obsidian-graph/src/clean/panel.css",
+    "namespaced": "#panel",
+    "lines": 246
+  },
+  "verification": {
+    "node_check": {
+      "panel_js": true,
+      "recon_js": true
+    },
+    "npm_test": {
+      "exit": 0,
+      "tests": 110,
+      "pass": 110,
+      "fail": 0
+    },
+    "cdp_probe": {
+      "panel_visible": true,
+      "sections_present": {
+        "Filters": true,
+        "Display": true,
+        "Forces": true,
+        "Groups": true
+      },
+      "dataset_count_before": 19,
+      "type_counts": {
+        "page": 10,
+        "endpoint": 1,
+        "asset": 2,
+        "artifact": 2,
+        "unresolved": 4,
+        "param": 0
+      },
+      "types_asset_off_count": 17,
+      "assets_hidden": 2,
+      "assets_hidden_equals_asset_count": true,
+      "types_asset_on_count": 19,
+      "restored_exactly": true,
+      "status_clientErr_only_count": 0,
+      "status_clientErr_expected": 0,
+      "status_filter_matches_expected": true
+    }
+  },
+  "definition_of_done_verified": {
+    "tests_exist": true,
+    "tests_passing": true,
+    "implementation_matches_plan": true,
+    "no_todo_comments": true,
+    "all_file_changes_real": true
+  },
+  "notes": [
+    "Panel root re-homes into #panel .settings-placeholder when the inspector rebuilds the aside.",
+    "show() activates the Inspector's Settings tab when the placeholder is hidden.",
+    "Status 4xx probe count was 0 on tests/site; filter equality checked against filterCounts().status.clientErr."
+  ]
+}

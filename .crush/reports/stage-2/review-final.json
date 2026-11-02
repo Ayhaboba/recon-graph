@@ -1,0 +1,161 @@
+{
+  "stage": 2,
+  "retry": 2,
+  "reviewer": "worker-agent (read-only stand-in)",
+  "verdict": "PASS",
+  "score": 84,
+  "previous_blockers": [
+    {
+      "id": "HIGH-json-quoted-keys",
+      "status": "fixed",
+      "evidence": "lib/rules.js:23 — SECRET_ASSIGN_SOURCE now allows an optional closing quote between the word-bounded name and the separator: (?:SECRET_NAME)\\b[\"']?\\s*[:=]\\s*(?:\"...\"|'...'|bare). Probes: scan('{\"token\": \"abcdef\"}') -> 1 secret-assign; '{\"password\": \"hunter2\"}' -> 1; '{\"api_key\": \"abcd\"}' -> 1; 'token: \"abcdef\"' -> 1; '{ \"apiKey\" : \"abcdef\" }' -> 1. False-positive probes all stay at 0: 'max_tokens: 4096', '{\"max_tokens\": 4096}', 'secretCount=3', 'api_key_id=abc', '{\"api_key_id\": \"abc\"}', 'user_password=\"x\"', 'passwordField=\"x\"', 'tokenizer', 'tokenization: x', 'foo_secret_bar', '\"tokens\": \"abcdef\"', 'accessKeyId=abcd'. tests/rules.test.js:158-191 locks both directions."
+    },
+    {
+      "id": "MED-base-unquoted-trailing-slash",
+      "status": "fixed",
+      "evidence": "lib/extract.js:268-276 splitSelfClosing strips a trailing '/' only when it is preceded by whitespace or a closing quote; firstBaseHref (:346) and extractHtml (:410) share it. Probe with baseUrl http://site.test/dir/page.html: '<base href=/sub/><a href=after>' -> base http://site.test/sub/, link http://site.test/sub/after. '<base href=/sub/ ><a href=after>' -> /sub/ and /sub/after. '<base href=/sub /><a href=after>' -> base /sub, link /after (space makes it a real self-closing marker). Quoted '<base href=\"/sub/\">' -> /sub/ and /sub/after. tests/extract.test.js:222-265."
+    },
+    {
+      "id": "MED-js-postfix-statement-regex",
+      "status": "fixed",
+      "evidence": "lib/extract.js:684-835 — lastToken plus a paren stack distinguish statement headers from calls; ++/-- (:819) no longer flips expectOperand, and the ')' of if/while/for/with (:781-789) sets regex-start state. Probes keep only /api/v1/real for: 'a++ / 2', 'a++/2', 'a-- / 2', 'if (x) /.../.test(y)', while/for/with variants, nested 'if ((a || b) && c)', 'for (;;)', 'for (let i=0;i<3;i++)', 'if (a && b)', 'f() / 2', 'obj.m(a) / 2'. tests/extract.test.js:267-298."
+    }
+  ],
+  "checks": [
+    {
+      "id": "secret-assign-json-and-object-positives",
+      "result": "pass",
+      "evidence": "lib/rules.js:23 — probes: {\"token\": \"abcdef\"} -> 1, {\"password\": \"hunter2\"} -> 1, {\"api_key\": \"abcd\"} -> 1, token: \"abcdef\" -> 1, 'password': 'abcdef' -> 1, DB_PASSWORD=hunter2 -> 1, {\"access_key\":\"abcdef\"} -> 1."
+    },
+    {
+      "id": "secret-assign-negatives-still-clean",
+      "result": "pass",
+      "evidence": "lib/rules.js:12-23 — probes all return 0 secret-assign: max_tokens: 4096, max_tokens=4096, {\"max_tokens\": 4096}, secretCount=3, api_key_id=abc, {\"api_key_id\": \"abc\"}, user_password=\"x\", passwordField=\"x\", tokenizer, tokenization: x, foo_secret_bar, \"tokens\": \"abcdef\", accessKeyId=abcd, secretary: hello."
+    },
+    {
+      "id": "rules-fixtures-unchanged",
+      "result": "pass",
+      "evidence": "npm test: rules.test.js 13/13. secrets.js -> 7 findings with 3 secret-assign; bundle.js -> 5 findings with 3 stacktrace; flag.html -> all seven rule kinds exactly once (tests/rules.test.js:66-136)."
+    },
+    {
+      "id": "base-unquoted-trailing-slash",
+      "result": "pass",
+      "evidence": "lib/extract.js:268-276,346,410 — '<base href=/sub/><a href=after>' -> base http://site.test/sub/, link http://site.test/sub/after; '<base href=/sub/ >' same; '<base href=/sub />' -> base /sub, link /after."
+    },
+    {
+      "id": "unquoted-attribute-regressions",
+      "result": "pass",
+      "evidence": "'<a href=/a/>' -> http://site.test/a; '<a href=/a/>' with base -> /a; '<a href=\"/a/\">' -> /a; '<img src=x />', '<img src=x/>', '<img src=\"x\"/>', '<img src=\"x\" />' all -> http://site.test/dir/x; unquoted href=/a/ paths work for iframe/link/script/area/form; srcset still parses."
+    },
+    {
+      "id": "js-postfix-and-statement-regex",
+      "result": "pass",
+      "evidence": "lib/extract.js:758-835 — probes: 'var b=a++ / 2; ...' -> only /api/v1/real; 'a-- / 2' -> only /api/v1/real; 'if (x) /.../.test(y)' -> only /api/v1/real (no /api/v1/fake); for(;;), for-of, while, with variants -> only /api/v1/real."
+    },
+    {
+      "id": "js-keyword-regression-suite",
+      "result": "pass",
+      "evidence": "Probes keep later links for: 'for (;;) { ... }', 'for (let i=0;i<3;i++)', 'if (a && b)', 'if ((a || b) && c) /x/.test(y)', 'f() / 2', 'obj.m(a) / 2', 'arr[0] / 2', '({}) / 2', 'x.return / 2', 'of / 2', 'return /re/', '10 / 2 / 5', 'a /= 2', regex literal with [/] class, comments with fake paths, template '/api/${id}/x'."
+    },
+    {
+      "id": "js-tokenizer-new-edge-regressions",
+      "result": "fail",
+      "evidence": "lib/extract.js:805-817 — the '(' branch takes lastToken word as a header keyword without checking the preceding dot, so 'obj.if(x) / 2; var api=\"/api/v1/real\";' and 'obj.while(x) / 2; ...' return [] (later links lost). Residual of the same class: 'for await (const x of y) /...fake.../ .test(x)' leaks /api/v1/fake (pre-existing), and 'if (x) {} /...fake.../.test(y)' leaks it via the '}' branch (pre-existing). See issues.low."
+    },
+    {
+      "id": "js-tokenizer-complexity",
+      "result": "fail",
+      "evidence": "lib/extract.js:758 — parens.some(...) runs for every identifier, O(depth) each. Crafted '('.repeat(d) + 'x '.repeat(k): 30KB -> 30 ms, 60KB -> 324 ms, 120KB -> 1228 ms (quadratic). A ~1MB hostile JS body projects to minutes in the single scanner process. See issues.medium."
+    },
+    {
+      "id": "fixtures-and-counts",
+      "result": "pass",
+      "evidence": "tests/fixtures: exactly 5 HTML + 3 JS. Direct probes: basic 13, nested 6, attrs 5, css 4, flag 1. endpoints.js -> exact 6-URL set incl. /api/v3; bundle.js -> exactly http://site.test/api/v2/orders; secrets.js -> no links. tests/extract.test.js:53-67 asserts the fixture set; :315-337 the endpoint sets."
+    },
+    {
+      "id": "srcset-data-and-comma",
+      "result": "pass",
+      "evidence": "Probe '<img srcset=\"https://cdn.test/a,b.png 1x, //cdn.test/c 2x\">' -> a,b.png and //cdn.test/c; data URI + /ok.png -> only /ok.png; trailing comma and 1x/100w descriptors behave (lib/extract.js:175-203; tests/extract.test.js:193-208)."
+    },
+    {
+      "id": "base-first-wins-document-wide",
+      "result": "pass",
+      "evidence": "Probe '<a href=before><base href=/sub/><a href=after><base href=/other/>' -> /sub/before and /sub/after, no /other/; comment/script-embedded base ignored; empty href falls back to document base (lib/extract.js:305-352,362-374; tests/extract.test.js:210-220)."
+    },
+    {
+      "id": "userinfo-stripping",
+      "result": "pass",
+      "evidence": "lib/norm.js:63-110,396 — https://u:p@h.test/x -> https://h.test/x; key -> 'GET https://h.test/x'; originOf -> https://h.test; hostOf -> h.test; paramKey -> 'param:https://h.test/x?a&b'; IPv6 [::1]:8080 preserved; resolveUrl against userinfo base -> https://h.test/dir/a."
+    },
+    {
+      "id": "unicode-and-trailing-dot-host",
+      "result": "pass",
+      "evidence": "normalizeUrl HÖST.test and höst.test both -> http://höst.test/x; host. -> host; host.. -> host. (exactly one dot stripped); bracketed IPv6 untouched (lib/norm.js:102-107)."
+    },
+    {
+      "id": "criterion-key-pair",
+      "result": "pass",
+      "evidence": "key('//host/a?b=2&a=1') === key('https://host/a?a=1&b=2') === 'GET https://host/a?a=1&b=2'; spec §9 row 2 and tests/norm.test.js:22-29."
+    },
+    {
+      "id": "rules-seven-kinds",
+      "result": "pass",
+      "evidence": "RULES.length === 7 with severities flag/ctf/aws-key/private-key/secret-assign=high, stacktrace=medium, todo=low; severityOf('does-not-exist') === null (tests/rules.test.js:48-64)."
+    },
+    {
+      "id": "missing-fixtures-fail-loudly",
+      "result": "pass",
+      "evidence": "Scratch fs preload made endpoints.js appear missing; 'node --test tests/extract.test.js' -> 20 tests, 20 fail, 0 pass, 0 skipped, hookFailed 'missing fixture(s) after retry: tests/fixtures/js/endpoints.js'. No t.skip/t.todo anywhere (grep clean)."
+    },
+    {
+      "id": "npm-test",
+      "result": "pass",
+      "evidence": "npm test -> 72 tests, 72 pass, 0 fail, 0 cancelled, 0 skipped, 0 todo; node --check passes for lib/extract.js, lib/rules.js, lib/norm.js."
+    },
+    {
+      "id": "new-tests-lock-the-three-blockers",
+      "result": "pass",
+      "evidence": "tests/rules.test.js:158-191 (JSON/object keys + false positives), tests/extract.test.js:222-265 (unquoted trailing slash), :267-298 (postfix and statement-position regex). All green, no skips."
+    },
+    {
+      "id": "verification-artifact-freshness",
+      "result": "fail",
+      "evidence": ".crush/reports/stage-2/verification.json still records 53 tests and verification-retry.json 65 tests; current suite is 72. Worker-2-final/worker-3-final are current. Stale evidence only, no source defect."
+    }
+  ],
+  "issues": {
+    "critical": [],
+    "high": [],
+    "medium": [
+      "lib/extract.js:758 — new parens.some((entry) => entry.forHead) runs once per identifier token, making stringLiterals O(depth x identifier-count): crafted 30KB/60KB/120KB inputs measured 30/324/1228 ms, i.e. quadratic. This is new in the final repair; a ~1MB hostile JS body can stall the single scanner process for minutes. Compute inForHead only when word === 'of' (or keep a forHead counter) and add a deep-nesting perf test."
+    ],
+    "low": [
+      "lib/extract.js:805-817 — the '(' branch uses lastToken.value as a statement-header keyword without checking whether it was reached after '.', so valid member calls named if/while/for/with followed by division lose later links: 'obj.if(x) / 2; var api=\"/api/v1/real\";' -> []. New heuristic introduced by this repair; rare in real bundles.",
+      "lib/extract.js:805-817 — 'for await (const x of y)' is not recognised as a for-header (prevWord is 'await'), so a regex literal in statement position after it leaks its body as a link: 'for await (const x of y) /\"...fake...\"/.test(x)' yields /api/v1/fake. Same class as the fixed defect but pre-existing/out of the repair's stated scope.",
+      "lib/extract.js:798-803 — a '/' in statement position after a closed block ('if (x) {} /re/.test(y)') is still read as division and the regex body can leak as a link. Pre-existing, same heuristic class.",
+      "lib/extract.js:285-303 — query-only '<base href=\"?v=1\">' is still treated as a directory (base http://site.test/dir/page.html/?v=1, link /dir/page.html/after instead of /dir/after). Previously reported low; unchanged, out of repair scope.",
+      "lib/extract.js:308-352 — <base> inside <title>, <textarea> or <template> is still treated as a real document base. Previously reported low; unchanged, out of repair scope.",
+      ".crush/reports/stage-2/verification.json (53 tests) and verification-retry.json (65 tests) are stale relative to the current 72-test suite; refresh or clearly mark superseded so stage evidence is unambiguous."
+    ]
+  },
+  "file_sha256": {
+    "lib/rules.js": "cb31cda21a73ab16070b8b445f955d40855aa0034149c512a81e162e0f845bc9",
+    "lib/extract.js": "4d11d4cddcc4b67ae4cddde91924f10ab25de19e52206a23a4c810d06ca4af3f",
+    "lib/norm.js": "cce5cef84aff1149765bd7b1d016dbb390e4a18843757fd045fd6039863f5ff0",
+    "tests/rules.test.js": "748eaee866d1b2a361f419bd5ee583735621afdd98e38468a828b9c9dd5075a2",
+    "tests/extract.test.js": "dd9ba91df44ef6ca06b86b3e3af9acd42cda7fa6cf9b9471e9cae2eee6bea740",
+    "tests/norm.test.js": "2fb41e6786e48ddb6c2d216efaf524af499aaeaab89a840e72346135eaeb248b",
+    "tests/fixtures/html/attrs.html": "05a64550bd2e5ef50562b548ea8fe3bda1dd1c6991f233bea21665d612d05d63",
+    "tests/fixtures/html/basic.html": "9afefd7e947cafe20aaff260dd67132661cb438c2c95abe835227b6f0c7d043a",
+    "tests/fixtures/html/css.html": "9cdf26223eaffe5d23e58642923cc0cda530421eefb33346e2252b43d749da03",
+    "tests/fixtures/html/flag.html": "904dd0756b4f45fd470d2e9af1a65d5a74e508db7c638dea8e3e86075991a1d9",
+    "tests/fixtures/html/nested.html": "127a88a63396425411892ce3fc41942754e56b04e28fe981ca6c22427a33c080",
+    "tests/fixtures/js/bundle.js": "da595d44a94ef31be0ddef83249487b6963a52f60df7da59284f9184246b019c",
+    "tests/fixtures/js/endpoints.js": "bf00dd08f0fcc08c15400b223427cf372c90da05ee75b5a291ddbec17a8dd9fe",
+    "tests/fixtures/js/secrets.js": "594f2b11e69deaec28de3242c53e2982dd0875751be53e47d7027676aa458d92",
+    ".crush/reports/stage-2/worker-2-final.json": "a905a4ebba528e76406f6d2ba78ca5f5ccd7af74c7c4644bacb61b1e9510049d",
+    ".crush/reports/stage-2/worker-3-final.json": "15b089a71085f24052edb886503a331361790cf2704fdd870e6291e4a57b0a0d"
+  },
+  "criterion_met": true,
+  "notes": "Read-only review: no project source was modified. A scratch fs preload under .probe-tmp was created and deleted only for the missing-fixture test. All three RETRY blockers are fixed and every named regression of the final repair was probed directly; the suite is 72/72 green with 0 skipped. Stage-2 criterion (§9 row 2) is met: 5 HTML + 3 JS fixtures, exact link counts 13/6/5/4/1, exact endpoint set, key pair collapses. PASS because score 84 >= 75 and there are no critical/high issues. Remaining defects: one medium performance regression introduced by the new per-identifier parens.some scan (quadratic on crafted deep nesting) and low-severity JS heuristic edges (reserved-word method-call division, for await, block-then-regex) plus the two previously reported <base> lows and stale verification artifacts."
+}

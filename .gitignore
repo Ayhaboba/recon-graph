@@ -1,0 +1,26 @@
+# dependencies
+node_modules/
+
+# runtime data (scan databases, response bodies)
+data/
+
+# scratch / tooling leftovers
+.probe-tmp/
+.tmp-*
+.v*-*
+.acc-*
+*.log
+*.sqlite*
+
+# audit trail is tracked; ignore only its scratch dirs
+.crush/**/tmp*
+
+# editor / OS junk
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.cursor/
+*.swp
+*.swo
+*~

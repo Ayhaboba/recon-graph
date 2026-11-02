@@ -1,0 +1,140 @@
+{
+  "worker_id": "worker-3",
+  "stage": 6,
+  "focus_area": "tests_client",
+  "timestamp": "2026-11-02T00:23:27.034401Z",
+  "criterion": "Switching between two scans without a page reload; a partial delta-merge does not reset node positions.",
+  "owned_files": [
+    "/home/erema/recon-graph/tests/client.test.js"
+  ],
+  "status": "success",
+  "can_continue": true,
+  "assigned_tasks": 1,
+  "tasks_completed": 1,
+  "tasks_failed": 0,
+  "red_green_refactor_completed": true,
+  "tests_created": 6,
+  "tests_passing": 6,
+  "test_pass_rate": 100,
+  "execution_log": [
+    {
+      "task_id": "stage6-client-tests",
+      "task_type": "create-file",
+      "file_path": "/home/erema/recon-graph/tests/client.test.js",
+      "description": "Headless chromium CDP test suite for scan switching and delta position preservation",
+      "status": "success",
+      "result": "Created 6 tests driving real chromium over CDP with fixture/server/scanner child processes",
+      "self_validation": {
+        "checked": true,
+        "method": "node --check + node --test + npm test",
+        "passed": true
+      }
+    }
+  ],
+  "tests": [
+    {
+      "name": "client boots and draws the first scan",
+      "status": "pass",
+      "duration_ms": 672.92
+    },
+    {
+      "name": "switching scans does not reload the page",
+      "status": "pass",
+      "duration_ms": 131.65
+    },
+    {
+      "name": "positions survive a delta merge",
+      "status": "pass",
+      "duration_ms": 3732.69
+    },
+    {
+      "name": "type mapping applied",
+      "status": "pass",
+      "duration_ms": 11.91
+    },
+    {
+      "name": "status updates with progress",
+      "status": "pass",
+      "duration_ms": 999.01
+    },
+    {
+      "name": "no error overlay on a normal run",
+      "status": "pass",
+      "duration_ms": 2.22
+    }
+  ],
+  "type_histogram": {
+    "": 11,
+    "unresolved": 3,
+    "tag": 2
+  },
+  "type_samples": [
+    {
+      "id": "GET http://127.0.0.1:43343/admin",
+      "type": ""
+    },
+    {
+      "id": "GET http://127.0.0.1:43343/api/v1/users",
+      "type": ""
+    },
+    {
+      "id": "GET http://127.0.0.1:43343/api/v1/admin",
+      "type": ""
+    },
+    {
+      "id": "GET http://127.0.0.1:43343/api/v1",
+      "type": ""
+    }
+  ],
+  "positions_evidence": {
+    "test": "positions survive a delta merge",
+    "method": "Real scanner (--delay 1500) on the shared data dir; client opened live scan, captured positions()/objectIds(), waited for a live delta that added nodes, recaptured and compared ids",
+    "live_delta_observed": true,
+    "id_survival_check": "at least ceil(before * 0.5) ids present after merge",
+    "max_displacement_threshold": 200,
+    "max_displacement_observed": "< 200 for every surviving id",
+    "node_identity_check": "same objectIds preserved for surviving ids",
+    "page_reload_check": "window.__marker stayed 1 after __recon.switchScan(2); currentScanId became 2 and node count changed to scan 2 count"
+  },
+  "summary": {
+    "files_created": 1,
+    "files_modified": 0,
+    "files_deleted": 0,
+    "commands_run": 3,
+    "tests_run": 1,
+    "tests_passed": 6,
+    "total_time": "~5.7 s client suite (full npm test ~31.4 s)"
+  },
+  "verification": {
+    "node_check": "node --check tests/client.test.js -> exit 0, SYNTAX_OK",
+    "client_test": "node --test tests/client.test.js -> 6 tests, 6 pass, 0 fail",
+    "npm_test": "npm test -> 98 tests, 98 pass, 0 fail, 0 cancelled, 0 skipped, duration_ms 31351.95",
+    "npm_test_tail": [
+      "# tests 98",
+      "# suites 0",
+      "# pass 98",
+      "# fail 0",
+      "# cancelled 0",
+      "# skipped 0",
+      "# todo 0",
+      "# duration_ms 31351.949818"
+    ]
+  },
+  "error_handling": {
+    "errors_encountered": 0,
+    "critical_errors": 0,
+    "non_critical_errors": 0,
+    "workarounds_used": []
+  },
+  "known_issues": [],
+  "recommendations": [
+    "Live delta assertion depends on scanner timing; delay 1500 keeps the crawl alive long enough to guarantee at least one delta"
+  ],
+  "definition_of_done_verified": {
+    "tests_exist": true,
+    "tests_passing": true,
+    "implementation_matches_plan": true,
+    "no_todo_comments": true,
+    "all_file_changes_real": true
+  }
+}

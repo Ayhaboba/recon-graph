@@ -1,0 +1,756 @@
+{
+  "stage": 2,
+  "retry": 1,
+  "timestamp": "2026-11-01T23:04:10Z",
+  "repo": "/home/erema/recon-graph",
+  "node": "v22.23.3",
+  "syntax_ok": true,
+  "syntax": {
+    "node --check lib/norm.js": 0,
+    "node --check lib/extract.js": 0,
+    "node --check lib/rules.js": 0
+  },
+  "npm_test": {
+    "exit": 0,
+    "tests": 65,
+    "pass": 65,
+    "fail": 0,
+    "raw": "1..65\n# tests 65\n# suites 0\n# pass 65\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 134.06951"
+  },
+  "bare_node_test": {
+    "exit": 0,
+    "tests": 65,
+    "pass": 65,
+    "fail": 0,
+    "raw": "1..65\n# tests 65\n# suites 0\n# pass 65\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 145.172079"
+  },
+  "criterion": {
+    "key_pair_equal": true,
+    "key_pair": [
+      "GET https://host/a?a=1&b=2",
+      "GET https://host/a?a=1&b=2"
+    ],
+    "expected": "GET https://host/a?a=1&b=2",
+    "criterion_pass": true,
+    "html_fixtures": 5,
+    "js_fixtures": 3,
+    "basic_links": 13,
+    "nested_links": 6,
+    "attrs_links": 5,
+    "css_links": 4,
+    "flag_links": 1,
+    "endpoints_links": 6,
+    "endpoints_unique": 6,
+    "bundle_links": 1,
+    "secrets_rules_sorted": [
+      "aws-key",
+      "ctf",
+      "flag",
+      "secret-assign",
+      "secret-assign",
+      "secret-assign",
+      "todo"
+    ],
+    "bundle_rules_sorted": [
+      "private-key",
+      "stacktrace",
+      "stacktrace",
+      "stacktrace",
+      "todo"
+    ],
+    "flag_rules_sorted": [
+      "aws-key",
+      "ctf",
+      "flag",
+      "private-key",
+      "secret-assign",
+      "stacktrace",
+      "todo"
+    ],
+    "url_probes": {
+      "cred_key": "GET https://h.test/x",
+      "unicode_a": "https://höst.test/A",
+      "unicode_b": "https://höst.test/A",
+      "unicode_equal": true,
+      "trailing_dot": "https://host/x",
+      "proto_rel": "http://host/x",
+      "index_query": "https://h.test/?x=1",
+      "param_key": "param:https://h/a?id&z",
+      "pass": true
+    },
+    "extract_probes": {
+      "srcset_comma": {
+        "links": [
+          "https://cdn.test/a,b.png",
+          "http://cdn.test/c"
+        ],
+        "has_exact_two": true,
+        "no_bare_b": true
+      },
+      "srcset_data": {
+        "links": [
+          "http://site.test/ok.png"
+        ],
+        "pass": true
+      },
+      "base_before_after": {
+        "links": [
+          "http://site.test/sub/before",
+          "http://site.test/sub/after"
+        ],
+        "pathnames": [
+          "/sub/before",
+          "/sub/after"
+        ],
+        "pass": true
+      },
+      "second_base_ignored": {
+        "links": [
+          "http://site.test/first/x"
+        ],
+        "pass": true
+      },
+      "js_regex_literal": {
+        "links": [
+          "http://site.test/api/v1/users"
+        ],
+        "pass": true
+      },
+      "js_unicode_escape": {
+        "links": [
+          "http://site.test/api/v1"
+        ],
+        "pass": true
+      },
+      "js_newline_escape": {
+        "links": [],
+        "bad_present": false,
+        "pass": true
+      },
+      "fixture_links": {
+        "basic.html": {
+          "count": 13,
+          "expected": 13,
+          "pass": true
+        },
+        "nested.html": {
+          "count": 6,
+          "expected": 6,
+          "pass": true
+        },
+        "attrs.html": {
+          "count": 5,
+          "expected": 5,
+          "pass": true
+        },
+        "css.html": {
+          "count": 4,
+          "expected": 4,
+          "pass": true
+        },
+        "flag.html": {
+          "count": 1,
+          "expected": 1,
+          "pass": true
+        }
+      },
+      "endpoints": {
+        "links": [
+          "http://site.test/api/v1/users",
+          "http://site.test/api/v1/admin",
+          "http://site.test/api/v1/login",
+          "https://api.test/v1/x",
+          "http://site.test/static/app.4f2c.js",
+          "http://site.test/api/v3"
+        ],
+        "count": 6,
+        "unique": 6,
+        "has_v3": true,
+        "pass": true
+      },
+      "pass": true
+    },
+    "rules_probes": {
+      "password_eq": {
+        "text": "password=hunter2",
+        "ids": [
+          "secret-assign"
+        ],
+        "pass": true
+      },
+      "db_password_eq": {
+        "text": "DB_PASSWORD=hunter2",
+        "ids": [
+          "secret-assign"
+        ],
+        "pass": true
+      },
+      "password_colon": {
+        "text": "password: hunter2",
+        "ids": [
+          "secret-assign"
+        ],
+        "pass": true
+      },
+      "password_quoted": {
+        "text": "password=\"hunter2\"",
+        "ids": [
+          "secret-assign"
+        ],
+        "pass": true
+      },
+      "user_password": {
+        "text": "user_password=\"x\"",
+        "ids": [],
+        "pass": true
+      },
+      "passwordField": {
+        "text": "passwordField=\"x\"",
+        "ids": [],
+        "pass": true
+      },
+      "tokenizer": {
+        "text": "tokenizer",
+        "ids": [],
+        "pass": true
+      },
+      "java_stack": {
+        "text": "at com.acme.http.Router.dispatch(Router.java:42)",
+        "ids": [
+          "stacktrace"
+        ],
+        "pass": true
+      },
+      "py_stack": {
+        "text": "File \"/app/server.py\", line 17, in handle",
+        "ids": [
+          "stacktrace"
+        ],
+        "pass": true
+      },
+      "secrets_js": {
+        "ids_sorted": [
+          "aws-key",
+          "ctf",
+          "flag",
+          "secret-assign",
+          "secret-assign",
+          "secret-assign",
+          "todo"
+        ],
+        "expected": [
+          "aws-key",
+          "ctf",
+          "flag",
+          "secret-assign",
+          "secret-assign",
+          "secret-assign",
+          "todo"
+        ],
+        "pass": true
+      },
+      "bundle_js": {
+        "ids_sorted": [
+          "private-key",
+          "stacktrace",
+          "stacktrace",
+          "stacktrace",
+          "todo"
+        ],
+        "expected": [
+          "private-key",
+          "stacktrace",
+          "stacktrace",
+          "stacktrace",
+          "todo"
+        ],
+        "pass": true
+      },
+      "flag_html": {
+        "ids": [
+          "flag",
+          "ctf",
+          "aws-key",
+          "secret-assign",
+          "private-key",
+          "stacktrace",
+          "todo"
+        ],
+        "ids_sorted": [
+          "aws-key",
+          "ctf",
+          "flag",
+          "private-key",
+          "secret-assign",
+          "stacktrace",
+          "todo"
+        ],
+        "each_once": true,
+        "pass": true
+      },
+      "pass": true
+    }
+  },
+  "probes": {
+    "url": {
+      "cred_key": "GET https://h.test/x",
+      "unicode_a": "https://höst.test/A",
+      "unicode_b": "https://höst.test/A",
+      "unicode_equal": true,
+      "trailing_dot": "https://host/x",
+      "proto_rel": "http://host/x",
+      "index_query": "https://h.test/?x=1",
+      "param_key": "param:https://h/a?id&z",
+      "pass": true
+    },
+    "extraction": {
+      "srcset_comma": {
+        "links": [
+          "https://cdn.test/a,b.png",
+          "http://cdn.test/c"
+        ],
+        "has_exact_two": true,
+        "no_bare_b": true
+      },
+      "srcset_data": {
+        "links": [
+          "http://site.test/ok.png"
+        ],
+        "pass": true
+      },
+      "base_before_after": {
+        "links": [
+          "http://site.test/sub/before",
+          "http://site.test/sub/after"
+        ],
+        "pathnames": [
+          "/sub/before",
+          "/sub/after"
+        ],
+        "pass": true
+      },
+      "second_base_ignored": {
+        "links": [
+          "http://site.test/first/x"
+        ],
+        "pass": true
+      },
+      "js_regex_literal": {
+        "links": [
+          "http://site.test/api/v1/users"
+        ],
+        "pass": true
+      },
+      "js_unicode_escape": {
+        "links": [
+          "http://site.test/api/v1"
+        ],
+        "pass": true
+      },
+      "js_newline_escape": {
+        "links": [],
+        "bad_present": false,
+        "pass": true
+      },
+      "fixture_links": {
+        "basic.html": {
+          "count": 13,
+          "expected": 13,
+          "pass": true
+        },
+        "nested.html": {
+          "count": 6,
+          "expected": 6,
+          "pass": true
+        },
+        "attrs.html": {
+          "count": 5,
+          "expected": 5,
+          "pass": true
+        },
+        "css.html": {
+          "count": 4,
+          "expected": 4,
+          "pass": true
+        },
+        "flag.html": {
+          "count": 1,
+          "expected": 1,
+          "pass": true
+        }
+      },
+      "endpoints": {
+        "links": [
+          "http://site.test/api/v1/users",
+          "http://site.test/api/v1/admin",
+          "http://site.test/api/v1/login",
+          "https://api.test/v1/x",
+          "http://site.test/static/app.4f2c.js",
+          "http://site.test/api/v3"
+        ],
+        "count": 6,
+        "unique": 6,
+        "has_v3": true,
+        "pass": true
+      },
+      "pass": true
+    },
+    "rules": {
+      "password_eq": {
+        "text": "password=hunter2",
+        "ids": [
+          "secret-assign"
+        ],
+        "pass": true
+      },
+      "db_password_eq": {
+        "text": "DB_PASSWORD=hunter2",
+        "ids": [
+          "secret-assign"
+        ],
+        "pass": true
+      },
+      "password_colon": {
+        "text": "password: hunter2",
+        "ids": [
+          "secret-assign"
+        ],
+        "pass": true
+      },
+      "password_quoted": {
+        "text": "password=\"hunter2\"",
+        "ids": [
+          "secret-assign"
+        ],
+        "pass": true
+      },
+      "user_password": {
+        "text": "user_password=\"x\"",
+        "ids": [],
+        "pass": true
+      },
+      "passwordField": {
+        "text": "passwordField=\"x\"",
+        "ids": [],
+        "pass": true
+      },
+      "tokenizer": {
+        "text": "tokenizer",
+        "ids": [],
+        "pass": true
+      },
+      "java_stack": {
+        "text": "at com.acme.http.Router.dispatch(Router.java:42)",
+        "ids": [
+          "stacktrace"
+        ],
+        "pass": true
+      },
+      "py_stack": {
+        "text": "File \"/app/server.py\", line 17, in handle",
+        "ids": [
+          "stacktrace"
+        ],
+        "pass": true
+      },
+      "secrets_js": {
+        "ids_sorted": [
+          "aws-key",
+          "ctf",
+          "flag",
+          "secret-assign",
+          "secret-assign",
+          "secret-assign",
+          "todo"
+        ],
+        "expected": [
+          "aws-key",
+          "ctf",
+          "flag",
+          "secret-assign",
+          "secret-assign",
+          "secret-assign",
+          "todo"
+        ],
+        "pass": true
+      },
+      "bundle_js": {
+        "ids_sorted": [
+          "private-key",
+          "stacktrace",
+          "stacktrace",
+          "stacktrace",
+          "todo"
+        ],
+        "expected": [
+          "private-key",
+          "stacktrace",
+          "stacktrace",
+          "stacktrace",
+          "todo"
+        ],
+        "pass": true
+      },
+      "flag_html": {
+        "ids": [
+          "flag",
+          "ctf",
+          "aws-key",
+          "secret-assign",
+          "private-key",
+          "stacktrace",
+          "todo"
+        ],
+        "ids_sorted": [
+          "aws-key",
+          "ctf",
+          "flag",
+          "private-key",
+          "secret-assign",
+          "stacktrace",
+          "todo"
+        ],
+        "each_once": true,
+        "pass": true
+      },
+      "pass": true
+    }
+  },
+  "links_detail": {
+    "basic": [
+      "http://site.test/css/app.css",
+      "http://site.test/js/main.js",
+      "http://site.test/refresh-target",
+      "http://site.test/img/inline.png",
+      "http://site.test/about",
+      "https://other.test/x",
+      "http://cdn.test/lib.js",
+      "http://site.test/map",
+      "http://site.test/img/logo.png",
+      "http://site.test/img/logo@2x.png",
+      "http://site.test/frame.html",
+      "http://site.test/contact",
+      "http://site.test/img/bg.png"
+    ],
+    "nested": [
+      "http://site.test/x",
+      "http://site.test/dir/y",
+      "http://site.test/dir/page.html?q=1",
+      "http://site.test/root",
+      "https://site.test/b",
+      "http://site.test/dir/sub/page.html"
+    ],
+    "attrs": [
+      "http://site.test/a?a=1&b=2",
+      "https://host.test/q?y=2&z=1",
+      "http://host.test/",
+      "http://site.test/",
+      "http://site.test/a/b"
+    ],
+    "css": [
+      "http://site.test/fonts/x.woff2",
+      "http://site.test/img/bg.png",
+      "https://cdn.test/i.svg",
+      "http://site.test/css/site.css"
+    ],
+    "flag": [
+      "http://site.test/linked"
+    ],
+    "endpoints": [
+      "http://site.test/api/v1/users",
+      "http://site.test/api/v1/admin",
+      "http://site.test/api/v1/login",
+      "https://api.test/v1/x",
+      "http://site.test/static/app.4f2c.js",
+      "http://site.test/api/v3"
+    ],
+    "bundle": [
+      "http://site.test/api/v2/orders"
+    ],
+    "js_probes": {
+      "regex_literal": [
+        "http://site.test/api/v1/users"
+      ],
+      "unicode_escape": [
+        "http://site.test/api/v1"
+      ],
+      "newline_escape": []
+    },
+    "srcset_comma": [
+      "https://cdn.test/a,b.png",
+      "http://cdn.test/c"
+    ],
+    "srcset_data": [
+      "http://site.test/ok.png"
+    ]
+  },
+  "findings_detail": {
+    "secrets": [
+      {
+        "rule": "flag",
+        "severity": "high",
+        "offset": 17
+      },
+      {
+        "rule": "ctf",
+        "severity": "high",
+        "offset": 52
+      },
+      {
+        "rule": "aws-key",
+        "severity": "high",
+        "offset": 88
+      },
+      {
+        "rule": "secret-assign",
+        "severity": "high",
+        "offset": 123
+      },
+      {
+        "rule": "secret-assign",
+        "severity": "high",
+        "offset": 144
+      },
+      {
+        "rule": "secret-assign",
+        "severity": "high",
+        "offset": 191
+      },
+      {
+        "rule": "todo",
+        "severity": "low",
+        "offset": 225
+      }
+    ],
+    "bundle": [
+      {
+        "rule": "private-key",
+        "severity": "high",
+        "offset": 11
+      },
+      {
+        "rule": "todo",
+        "severity": "low",
+        "offset": 128
+      },
+      {
+        "rule": "stacktrace",
+        "severity": "medium",
+        "offset": 184
+      },
+      {
+        "rule": "stacktrace",
+        "severity": "medium",
+        "offset": 238
+      },
+      {
+        "rule": "stacktrace",
+        "severity": "medium",
+        "offset": 304
+      }
+    ],
+    "flag": [
+      {
+        "rule": "flag",
+        "severity": "high",
+        "offset": 83
+      },
+      {
+        "rule": "ctf",
+        "severity": "high",
+        "offset": 101
+      },
+      {
+        "rule": "aws-key",
+        "severity": "high",
+        "offset": 132
+      },
+      {
+        "rule": "secret-assign",
+        "severity": "high",
+        "offset": 164
+      },
+      {
+        "rule": "private-key",
+        "severity": "high",
+        "offset": 196
+      },
+      {
+        "rule": "stacktrace",
+        "severity": "medium",
+        "offset": 239
+      },
+      {
+        "rule": "todo",
+        "severity": "low",
+        "offset": 329
+      }
+    ]
+  },
+  "benign_no_false_positives": true,
+  "benign_raw": [],
+  "scan_null_empty_ok": true,
+  "pathological": {
+    "basic_2mb_ms": 394.757307,
+    "scan_4mb_ms": 6.577517,
+    "limit_ms": 3000,
+    "all_under_limit": true,
+    "input_sizes": {
+      "two_mb_anchor": 2097147,
+      "four_mb_password": 4194291
+    },
+    "html_links_deduped": 1,
+    "scan_findings_capped": 200
+  },
+  "fixtures": {
+    "html": [
+      "attrs.html",
+      "basic.html",
+      "css.html",
+      "flag.html",
+      "nested.html"
+    ],
+    "js": [
+      "bundle.js",
+      "endpoints.js",
+      "secrets.js"
+    ],
+    "html_count": 5,
+    "js_count": 3
+  },
+  "raw_commands": [
+    {
+      "cmd": "node --check lib/norm.js && node --check lib/extract.js && node --check lib/rules.js",
+      "exit": 0,
+      "output": "NORM_EXIT=0\nEXTRACT_EXIT=0\nRULES_EXIT=0"
+    },
+    {
+      "cmd": "npm test",
+      "exit": 0,
+      "output": "1..65\n# tests 65\n# suites 0\n# pass 65\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 134.06951\nNPMTEST_EXIT=0"
+    },
+    {
+      "cmd": "node --test",
+      "exit": 0,
+      "output": "1..65\n# tests 65\n# suites 0\n# pass 65\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 145.172079\nBARE_TEST_EXIT=0"
+    },
+    {
+      "cmd": "ls -1 tests/fixtures/html tests/fixtures/js",
+      "exit": 0,
+      "output": "tests/fixtures/html:\nattrs.html\nbasic.html\ncss.html\nflag.html\nnested.html\n\ntests/fixtures/js:\nbundle.js\nendpoints.js\nsecrets.js"
+    },
+    {
+      "cmd": "node .probe-tmp/probe-retry.js",
+      "exit": 0,
+      "output": "{\"criterion\":{\"k1\":\"GET https://host/a?a=1&b=2\",\"k2\":\"GET https://host/a?a=1&b=2\",\"equal\":true,\"expected\":\"GET https://host/a?a=1&b=2\",\"pass\":true},\"fixtures\":{\"html\":[\"attrs.html\",\"basic.html\",\"css.html\",\"flag.html\",\"nested.html\"],\"js\":[\"bundle.js\",\"endpoints.js\",\"secrets.js\"],\"html_count\":5,\"js_count\":3,\"pass\":true},\"url_probes\":{\"cred_key\":\"GET https://h.test/x\",\"unicode_a\":\"https://höst.test/A\",\"unicode_b\":\"https://höst.test/A\",\"unicode_equal\":true,\"trailing_dot\":\"https://host/x\",\"proto_rel\":\"http://host/x\",\"index_query\":\"https://h.test/?x=1\",\"param_key\":\"param:https://h/a?id&z\",\"pass\":true},\"extract_probes\":{\"srcset_comma\":{\"links\":[\"https://cdn.test/a,b.png\",\"http://cdn.test/c\"],\"has_exact_two\":true,\"no_bare_b\":true},\"srcset_data\":{\"links\":[\"http://site.test/ok.png\"],\"pass\":true},\"base_before_after\":{\"links\":[\"http://site.test/sub/before\",\"http://site.test/sub/after\"],\"pathnames\":[\"/sub/before\",\"/sub/after\"],\"pass\":true},\"second_base_ignored\":{\"links\":[\"http://site.test/first/x\"],\"pass\":true},\"js_regex_literal\":{\"links\":[\"http://site.test/api/v1/users\"],\"pass\":true},\"js_unicode_escape\":{\"links\":[\"http://site.test/api/v1\"],\"pass\":true},\"js_newline_escape\":{\"links\":[],\"bad_present\":false,\"pass\":true},\"fixture_links\":{\"basic.html\":{\"count\":13,\"expected\":13,\"pass\":true},\"nested.html\":{\"count\":6,\"expected\":6,\"pass\":true},\"attrs.html\":{\"count\":5,\"expected\":5,\"pass\":true},\"css.html\":{\"count\":4,\"expected\":4,\"pass\":true},\"flag.html\":{\"count\":1,\"expected\":1,\"pass\":true}},\"endpoints\":{\"links\":[\"http://site.test/api/v1/users\",\"http://site.test/api/v1/admin\",\"http://site.test/api/v1/login\",\"https://api.test/v1/x\",\"http://site.test/static/app.4f2c.js\",\"http://site.test/api/v3\"],\"count\":6,\"unique\":6,\"has_v3\":true,\"pass\":true},\"pass\":true},\"rules_probes\":{\"password_eq\":{\"text\":\"password=hunter2\",\"ids\":[\"secret-assign\"],\"pass\":true},\"db_password_eq\":{\"text\":\"DB_PASSWORD=hunter2\",\"ids\":[\"secret-assign\"],\"pass\":true},\"password_colon\":{\"text\":\"password: hunter2\",\"ids\":[\"secret-assign\"],\"pass\":true},\"password_quoted\":{\"text\":\"password=\\\"hunter2\\\"\",\"ids\":[\"secret-assign\"],\"pass\":true},\"user_password\":{\"text\":\"user_password=\\\"x\\\"\",\"ids\":[],\"pass\":true},\"passwordField\":{\"text\":\"passwordField=\\\"x\\\"\",\"ids\":[],\"pass\":true},\"tokenizer\":{\"text\":\"tokenizer\",\"ids\":[],\"pass\":true},\"java_stack\":{\"text\":\"at com.acme.http.Router.dispatch(Router.java:42)\",\"ids\":[\"stacktrace\"],\"pass\":true},\"py_stack\":{\"text\":\"File \\\"/app/server.py\\\", line 17, in handle\",\"ids\":[\"stacktrace\"],\"pass\":true},\"secrets_js\":{\"ids_sorted\":[\"aws-key\",\"ctf\",\"flag\",\"secret-assign\",\"secret-assign\",\"secret-assign\",\"todo\"],\"expected\":[\"aws-key\",\"ctf\",\"flag\",\"secret-assign\",\"secret-assign\",\"secret-assign\",\"todo\"],\"pass\":true},\"bundle_js\":{\"ids_sorted\":[\"private-key\",\"stacktrace\",\"stacktrace\",\"stacktrace\",\"todo\"],\"expected\":[\"private-key\",\"stacktrace\",\"stacktrace\",\"stacktrace\",\"todo\"],\"pass\":true},\"flag_html\":{\"ids\":[\"flag\",\"ctf\",\"aws-key\",\"secret-assign\",\"private-key\",\"stacktrace\",\"todo\"],\"ids_sorted\":[\"aws-key\",\"ctf\",\"flag\",\"private-key\",\"secret-assign\",\"stacktrace\",\"todo\"],\"each_once\":true,\"pass\":true},\"pass\":true},\"performance\":{\"html_2mb_ms\":394.757307,\"html_2mb_input_bytes\":2097147,\"html_links\":1,\"scan_4mb_ms\":6.577517,\"scan_4mb_input_bytes\":4194291,\"scan_findings\":200,\"limit_ms\":3000,\"pass\":true},\"pass\":true}"
+    },
+    {
+      "cmd": "node .probe-tmp/gather-retry.js",
+      "exit": 0,
+      "output": "{\"links_detail\":{\"basic\":[\"http://site.test/css/app.css\",\"http://site.test/js/main.js\",\"http://site.test/refresh-target\",\"http://site.test/img/inline.png\",\"http://site.test/about\",\"https://other.test/x\",\"http://cdn.test/lib.js\",\"http://site.test/map\",\"http://site.test/img/logo.png\",\"http://site.test/img/logo@2x.png\",\"http://site.test/frame.html\",\"http://site.test/contact\",\"http://site.test/img/bg.png\"],\"nested\":[\"http://site.test/x\",\"http://site.test/dir/y\",\"http://site.test/dir/page.html?q=1\",\"http://site.test/root\",\"https://site.test/b\",\"http://site.test/dir/sub/page.html\"],\"attrs\":[\"http://site.test/a?a=1&b=2\",\"https://host.test/q?y=2&z=1\",\"http://host.test/\",\"http://site.test/\",\"http://site.test/a/b\"],\"css\":[\"http://site.test/fonts/x.woff2\",\"http://site.test/img/bg.png\",\"https://cdn.test/i.svg\",\"http://site.test/css/site.css\"],\"flag\":[\"http://site.test/linked\"],\"endpoints\":[\"http://site.test/api/v1/users\",\"http://site.test/api/v1/admin\",\"http://site.test/api/v1/login\",\"https://api.test/v1/x\",\"http://site.test/static/app.4f2c.js\",\"http://site.test/api/v3\"],\"bundle\":[\"http://site.test/api/v2/orders\"],\"js_probes\":{\"regex_literal\":[\"http://site.test/api/v1/users\"],\"unicode_escape\":[\"http://site.test/api/v1\"],\"newline_escape\":[]},\"srcset_comma\":[\"https://cdn.test/a,b.png\",\"http://cdn.test/c\"],\"srcset_data\":[\"http://site.test/ok.png\"]},\"findings_detail\":{\"secrets\":[{\"rule\":\"flag\",\"severity\":\"high\",\"offset\":17},{\"rule\":\"ctf\",\"severity\":\"high\",\"offset\":52},{\"rule\":\"aws-key\",\"severity\":\"high\",\"offset\":88},{\"rule\":\"secret-assign\",\"severity\":\"high\",\"offset\":123},{\"rule\":\"secret-assign\",\"severity\":\"high\",\"offset\":144},{\"rule\":\"secret-assign\",\"severity\":\"high\",\"offset\":191},{\"rule\":\"todo\",\"severity\":\"low\",\"offset\":225}],\"bundle\":[{\"rule\":\"private-key\",\"severity\":\"high\",\"offset\":11},{\"rule\":\"todo\",\"severity\":\"low\",\"offset\":128},{\"rule\":\"stacktrace\",\"severity\":\"medium\",\"offset\":184},{\"rule\":\"stacktrace\",\"severity\":\"medium\",\"offset\":238},{\"rule\":\"stacktrace\",\"severity\":\"medium\",\"offset\":304}],\"flag\":[{\"rule\":\"flag\",\"severity\":\"high\",\"offset\":83},{\"rule\":\"ctf\",\"severity\":\"high\",\"offset\":101},{\"rule\":\"aws-key\",\"severity\":\"high\",\"offset\":132},{\"rule\":\"secret-assign\",\"severity\":\"high\",\"offset\":164},{\"rule\":\"private-key\",\"severity\":\"high\",\"offset\":196},{\"rule\":\"stacktrace\",\"severity\":\"medium\",\"offset\":239},{\"rule\":\"todo\",\"severity\":\"low\",\"offset\":329}]},\"benign_raw\":[],\"scan_null\":[],\"scan_empty\":[]}"
+    }
+  ],
+  "probe_all_pass": true,
+  "failures": [],
+  "source_edits": false
+}

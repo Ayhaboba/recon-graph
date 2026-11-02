@@ -1,0 +1,52 @@
+{
+  "stage": 10,
+  "npm_install": "ok",
+  "npm_test": { "exit": 1, "tests": 121, "pass": 120, "fail": 1 },
+  "npm_test_runs": [
+    { "run": 1, "exit": 0, "tests": 121, "pass": 121, "fail": 0 },
+    {
+      "run": 2,
+      "exit": 1,
+      "tests": 121,
+      "pass": 120,
+      "fail": 1,
+      "failing_test": "tests/client.test.js:608 positions survive a delta merge",
+      "message": "node moved 210.1 after delta merge (must be < 200)"
+    }
+  ],
+  "smoke": "pass",
+  "status_4xx_nodes": 1,
+  "flaky": true,
+  "flaky_detail": "tests/client.test.js:608 'positions survive a delta merge': node moved 210.1 (threshold < 200) on run 2; run 1 was 121/121",
+  "scan": { "exit": 0, "nodes": 22, "edges": 26, "fuzz_hits": 5 },
+  "server": { "index": 200, "sim": 200, "api_scans": true },
+  "browser": {
+    "ready": true,
+    "nodes": 22,
+    "search": true,
+    "inspector": true,
+    "panel": true,
+    "console_errors": 0,
+    "exceptions": 0
+  },
+  "resume": {
+    "sigint_exit": 130,
+    "sigint_status": "stopped",
+    "sigint_inflight": 0,
+    "resume_status": "done",
+    "resume_pending": 0
+  },
+  "readme_commands": {
+    "install": true,
+    "scan": true,
+    "serve": true,
+    "test": true,
+    "smoke": true,
+    "db_selftest": true
+  },
+  "root_cause": "web/recon.js setGroupColors stored hex strings; vendored Node.initGraphics expects {a,rgb}",
+  "fix": "groupColors now {a:1, rgb:parseInt(hex.slice(1),16)}; no vendor edits",
+  "failures": [
+    "npm test run 2 flaked: tests/client.test.js:608 'positions survive a delta merge' — node moved 210.1 (threshold < 200)"
+  ]
+}

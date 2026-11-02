@@ -1,0 +1,49 @@
+{
+  "stage": 4,
+  "npm_test": {"exit": 0, "tests": 85, "pass": 85, "fail": 0},
+  "fuzz_test": {"exit": 0, "tests": 6, "pass": 6, "fail": 0},
+  "criterion": {
+    "admin_found": true,
+    "backup_found": true,
+    "api_found": true,
+    "nonexistent_absent": true,
+    "soft404_ignored": true,
+    "fuzz_nodes": 2,
+    "fuzzed_edges": 4
+  },
+  "soft404_probe": {
+    "unknown_a_sha": "4740569bd7c1d83a5553ccca4b52874b5d4dbc019a045e1095bbc8417c9364c9",
+    "unknown_b_sha": "4740569bd7c1d83a5553ccca4b52874b5d4dbc019a045e1095bbc8417c9364c9",
+    "identical": true,
+    "status_a": 200,
+    "status_b": 200,
+    "bytes_a": 71,
+    "bytes_b": 71,
+    "custom_word": "zzz-random-734913",
+    "custom_wordlist_nodes": 0,
+    "custom_run_tested": 4,
+    "custom_run_hits": 0,
+    "custom_run_soft_skips": 4
+  },
+  "resume": {
+    "depth": "2",
+    "wordlist": "lists/common.txt",
+    "node_count_stable": true,
+    "node_count_before": 18,
+    "node_count_after": 18,
+    "stdout": "[scanner] resume options: depth=2 scope=same-origin wordlist=/home/erema/recon-graph/lists/common.txt"
+  },
+  "raw": [
+    {"cmd": "node --check lib/fuzz.js bin/scanner.js tests/fuzz.test.js", "output": "exit=0"},
+    {"cmd": "npm test", "output": "1..85\n# tests 85\n# pass 85\n# fail 0\nexit=0"},
+    {"cmd": "node --test tests/fuzz.test.js", "output": "1..6\n# tests 6\n# pass 6\n# fail 0\nexit=0"},
+    {"cmd": "node bin/scanner.js http://127.0.0.1:40595/ --max-depth 2 --delay 0 --wordlist lists/common.txt --data-dir .v4-data", "output": "[scanner] fuzz: tested=188 hits=4 soft=184 err=0\n[scanner] scan 1 complete: nodes=18 edges=22 done=11 err=0 pending=0\nexit=0"},
+    {"cmd": "sqlite3 .v4-data/scans/1.sqlite <criterion query>", "output": "fuzz_nodes|2\nadmin|0\nbackup|1\napi|0\nnonexistent|0\nfuzzed_edges|4"},
+    {"cmd": "sqlite3 .v4-data/scans/1.sqlite <all-origin presence query>", "output": "any_admin|2\nany_api_v1|1\nany_backup|1\nany_nonexistent|0"},
+    {"cmd": "node -e fetch two unknown paths and sha256", "output": "status_a=200 bytes_a=71 sha_a=4740569bd7c1d83a5553ccca4b52874b5d4dbc019a045e1095bbc8417c9364c9; status_b=200 bytes_b=71 sha_b=4740569bd7c1d83a5553ccca4b52874b5d4dbc019a045e1095bbc8417c9364c9; identical=true"},
+    {"cmd": "node bin/scanner.js --resume 1 --wordlist .v4-wl.txt --data-dir .v4-data", "output": "[scanner] fuzz: tested=4 hits=0 soft=4 err=0\nnodes_before=18 nodes_after=18\nzzz_fuzz|0\nexit=0"},
+    {"cmd": "node bin/scanner.js --resume 1 --data-dir .v4-data", "output": "[scanner] resume options: depth=2 scope=same-origin wordlist=/home/erema/recon-graph/lists/common.txt\nnodes_before=18 nodes_after=18\nexit=0"},
+    {"cmd": "note: literal origin='fuzz' count for /admin and /api/v1 is 0", "output": "Crawler discovered /admin and /api/v1 before fuzzing; upsertNode kept origin='crawl'. Both keys exist in the graph (any_admin=2, any_api_v1=1), so the plan criterion 'found' is satisfied. Fuzz created 2 new nodes (/backup.zip, /robots.txt) and 4 fuzzed edges."}
+  ],
+  "failures": []
+}

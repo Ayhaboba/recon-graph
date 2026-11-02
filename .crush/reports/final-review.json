@@ -1,0 +1,55 @@
+{
+  "verdict": "PASS",
+  "score": 86,
+  "stages": {
+    "0": "pass",
+    "1": "pass",
+    "2": "pass",
+    "3": "pass",
+    "4": "pass",
+    "5": "pass",
+    "6": "pass",
+    "7": "pass",
+    "8": "pass",
+    "9": "pass",
+    "10": "pass",
+    "11": "pass"
+  },
+  "checks": [
+    {
+      "id": "engine-append-only",
+      "result": "pass",
+      "evidence": "sha256 graph-view patched 7aae1bab...84d7 (51836 B) vs original 53f22b6a...b51f (49819 B); cmp -n 49819 identical; diff removed lines = 0; shims/sim/pixi/graph.css hashes equal source hashes"
+    },
+    {
+      "id": "redos-worker-thread",
+      "result": "pass",
+      "evidence": "probe: body 4194304 B, stored prefix 2097152 chars ending '!', q=(a|aa)+$ -> regex-timeout, partial=true, abort_ms=2006, poller_gap_ms=21"
+    },
+    {
+      "id": "reproducible-tests",
+      "result": "pass",
+      "evidence": "npm test run1 121/121; run2 121/121; node tests/stage0-smoke.js pass=7 fail=0"
+    },
+    {
+      "id": "status-4xx-demonstrated",
+      "result": "pass",
+      "evidence": "[panel] status all before=23 clientErr-only=1; panel.test.js:673-691 asserts only status 400..499 remain and at least one node survives (/forbidden -> 403)"
+    },
+    {
+      "id": "readme-commands",
+      "result": "pass",
+      "evidence": "npm test 121 tests; node lib/db.js --self-test SUMMARY pass=20 fail=0; node tests/stage0-smoke.js SUMMARY pass=7 fail=0; README §7 count updated to 121"
+    },
+    {
+      "id": "skill-11-4",
+      "result": "pass",
+      "evidence": ".crush/reports/skill/verification.json: fixture acceptance 8/8, confirmed flag{demo} with status/body/headers proof, report sections present"
+    }
+  ],
+  "open_gaps": [
+    "Stage-6 full-dataset setData rebuild per delta remains recorded only in review artifacts, not deviations.md.",
+    "Stage-8 low: tests still do not cover the 100k-row DOM bound or hover dimming of non-matching nodes."
+  ],
+  "criterion_met": true
+}

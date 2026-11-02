@@ -1,0 +1,91 @@
+{
+  "worker_id": "worker-1",
+  "stage": 0,
+  "status": "success",
+  "files_written": [
+    "web/vendor/graph-view.js",
+    "web/vendor/shims.js",
+    "web/vendor/sim.js",
+    "web/vendor/pixi.min.js",
+    "web/vendor/graph.css",
+    "VENDOR.md",
+    "package.json",
+    ".gitignore"
+  ],
+  "sha256": {
+    "web/vendor/graph-view.js": {
+      "source": "53f22b6a827f7bdd503efdefd1b06ea03a5d2298d733a4d94624aa113315b51f",
+      "copy": "53f22b6a827f7bdd503efdefd1b06ea03a5d2298d733a4d94624aa113315b51f",
+      "bytes": 49819
+    },
+    "web/vendor/shims.js": {
+      "source": "8064f536183d6122c6febde2a63d1d7beebdeaf0cf8b4356b42c2ab58fa746dc",
+      "copy": "8064f536183d6122c6febde2a63d1d7beebdeaf0cf8b4356b42c2ab58fa746dc",
+      "bytes": 19916
+    },
+    "web/vendor/sim.js": {
+      "source": "549be2f69710af360d521c92b80c83718f673594d3dc2255a65e251199eee25d",
+      "copy": "549be2f69710af360d521c92b80c83718f673594d3dc2255a65e251199eee25d",
+      "bytes": 17693
+    },
+    "web/vendor/pixi.min.js": {
+      "source": "842814b22c348dcdab381ffb79da3763ff0672271f60f09dababa52656fd31b8",
+      "copy": "842814b22c348dcdab381ffb79da3763ff0672271f60f09dababa52656fd31b8",
+      "bytes": 487134
+    },
+    "web/vendor/graph.css": {
+      "source": "3ea9502e219d2a396cfba69a92073b80a9264f194517b7f6ed5be516a48f62d3",
+      "copy": "3ea9502e219d2a396cfba69a92073b80a9264f194517b7f6ed5be516a48f62d3",
+      "bytes": 5536
+    }
+  },
+  "commands": [
+    {
+      "cmd": "mkdir -p /home/erema/recon-graph/bin /home/erema/recon-graph/lib /home/erema/recon-graph/web/vendor /home/erema/recon-graph/data/scans /home/erema/recon-graph/data/bodies /home/erema/recon-graph/tests /home/erema/recon-graph/.crush/reports/stage-0 /home/erema/recon-graph/.crush/state",
+      "exit": 0,
+      "tail": "dirs created; ls shows bin, .crush, data, docs, lib, tests, web"
+    },
+    {
+      "cmd": "ls -la /home/erema/obsidian-graph/src/graph-view.js /home/erema/obsidian-graph/src/shims.js /home/erema/obsidian-graph/sim.js /home/erema/obsidian-graph/lib/pixi.min.js /home/erema/obsidian-graph/css/graph.css",
+      "exit": 0,
+      "tail": "5536 css/graph.css | 487134 lib/pixi.min.js | 17693 sim.js | 49819 src/graph-view.js | 19916 src/shims.js"
+    },
+    {
+      "cmd": "cp /home/erema/obsidian-graph/src/graph-view.js /home/erema/recon-graph/web/vendor/graph-view.js && cp /home/erema/obsidian-graph/src/shims.js /home/erema/recon-graph/web/vendor/shims.js && cp /home/erema/obsidian-graph/sim.js /home/erema/recon-graph/web/vendor/sim.js && cp /home/erema/obsidian-graph/lib/pixi.min.js /home/erema/recon-graph/web/vendor/pixi.min.js && cp /home/erema/obsidian-graph/css/graph.css /home/erema/recon-graph/web/vendor/graph.css",
+      "exit": 0,
+      "tail": "5 files copied, no output"
+    },
+    {
+      "cmd": "sha256sum <5 sources>",
+      "exit": 0,
+      "tail": "53f22b6a... graph-view.js | 8064f536... shims.js | 549be2f6... sim.js | 842814b2... pixi.min.js | 3ea9502e... graph.css"
+    },
+    {
+      "cmd": "sha256sum <5 copies>",
+      "exit": 0,
+      "tail": "identical 5/5: 53f22b6a, 8064f536, 549be2f6, 842814b2, 3ea9502e"
+    },
+    {
+      "cmd": "wc -c <5 sources> ; wc -c <5 copies>",
+      "exit": 0,
+      "tail": "49819 19916 17693 487134 5536 = 580098 total both sides"
+    },
+    {
+      "cmd": "cd /home/erema/recon-graph && node -e \"JSON.parse(fs.readFileSync('.crush/plan.json')); JSON.parse(fs.readFileSync('package.json')); console.log('json ok')\"",
+      "exit": 0,
+      "tail": "json ok"
+    },
+    {
+      "cmd": "cd /home/erema/recon-graph && sha256sum web/vendor/{graph-view.js,shims.js,sim.js,pixi.min.js,graph.css}",
+      "exit": 0,
+      "tail": "recheck after all writes: hashes unchanged, 5/5 match sources"
+    },
+    {
+      "cmd": "cd /home/erema/recon-graph && find . -maxdepth 3 -type f | sort",
+      "exit": 0,
+      "tail": "./.crush/plan.json ./.gitignore ./package.json ./VENDOR.md ./web/vendor/graph.css ./web/vendor/graph-view.js ./web/vendor/pixi.min.js ./web/vendor/shims.js ./web/vendor/sim.js"
+    }
+  ],
+  "notes": "Also wrote .crush/plan.json (TASK B) and this report. No npm install, no network, no writes to /home/erema/obsidian-graph. Vendored copies are byte-identical; VENDOR.md table filled with real sha256/byte values. web/index.html, bin/server.js, tests/stage0-smoke.js, README.md untouched (other workers).",
+  "blockers": []
+}

@@ -1,0 +1,60 @@
+{
+  "stage": 5,
+  "npm_test": {
+    "exit": 0,
+    "tests": 92,
+    "pass": 92,
+    "fail": 0
+  },
+  "stream_test": {
+    "exit": 0,
+    "tests": 7,
+    "pass": 7,
+    "fail": 0
+  },
+  "deps": {
+    "ws": "^8.22.1"
+  },
+  "criterion": {
+    "two_clients_snapshot": true,
+    "live_delta": true,
+    "progress_changes": true,
+    "same_final_count": true,
+    "final_nodes": 18
+  },
+  "readonly": {
+    "server_writes": false,
+    "proof": "chmod a-w on .v5-data/scans/1.sqlite{,-wal,-shm}; restarted server; GET /api/scans -> HTTP 200 {\"items\":[{\"id\":1,...,\"nodes\":18,\"edges\":21}]}; main DB sha256 f1c1d714... unchanged over 3s; server uses db.openReadOnly (lib/stream.js) and 'server is read-only' test passes"
+  },
+  "raw": [
+    {
+      "cmd": "node --check bin/server.js lib/stream.js tests/stream.test.js",
+      "output": "exit 0 (all three files parse)"
+    },
+    {
+      "cmd": "npm test",
+      "output": "# tests 92 / # pass 92 / # fail 0 / duration_ms 31081; NPM_EXIT=0"
+    },
+    {
+      "cmd": "node --test tests/stream.test.js",
+      "output": "1..7 / # pass 7 / # fail 0 / duration_ms 11598"
+    },
+    {
+      "cmd": "node -e \"console.log(require('./package.json').dependencies)\"",
+      "output": "{ ws: '^8.22.1' }"
+    },
+    {
+      "cmd": "fixture+server+scanner(max-depth 4, delay 300)+2 WS clients (.v5-probe.js)",
+      "output": "A: snapshot=1 delta=14 progress=6 errors=[] maxNodes=18 uniqueNodeIds=18 firstDeltaAfterMs=386 progressSeries=[0,10,15,16,18,18]; B: identical (snapshot=1 delta=14 progress=6 errors=[] maxNodes=18 uniqueNodeIds=18 firstDeltaAfterMs=386 progressSeries=[0,10,15,16,18,18])"
+    },
+    {
+      "cmd": "scanner tail",
+      "output": "[scanner] scan 1 complete: nodes=18 edges=21 done=14 err=0 pending=0"
+    },
+    {
+      "cmd": "readonly chmod a-w + GET /api/scans",
+      "output": "HTTP 200 {\"items\":[{\"id\":1,\"target\":\"http://127.0.0.1:34577/\",\"status\":\"done\",\"nodes\":18,\"edges\":21}]}; MAIN_DB_BEFORE=f1c1d714b195aa1795c50ed2db1795613d868a07340cbf0b1a563384fdfebdcf; MAIN_DB_AFTER same; MAIN_DB_UNCHANGED=true; WAL_SIZE=1310192"
+    }
+  ],
+  "failures": []
+}

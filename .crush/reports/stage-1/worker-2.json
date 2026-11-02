@@ -1,0 +1,36 @@
+{
+  "worker_id": "worker-2",
+  "stage": 1,
+  "status": "success",
+  "files_written": ["lib/db.js"],
+  "self_test": {
+    "pass": 12,
+    "fail": 0,
+    "raw_tail": "PASS tmpdir: /tmp/recon-db-1mckGf/scan.sqlite\nPASS schema: scans,nodes,edges,bodies,fts_docs,findings,queue,node_fts\nPASS scan: id=1 status=running\nPASS nodes=3: A=1 B=2 C=3\nPASS edges=2: count=2 duplicate=ignored\nPASS degree: degree A=1 B=2 C=1 (shared node B = 2)\nPASS fts: hits=1 snippet=\"<html>[delta]-flag-marker ALPHA</html>\"\nPASS upsert-idempotent: id=1 rev 11->12\nPASS rev: maxNodeRev=12 maxEdgeRev=2\nPASS delta: nodes=3 edges=2 cursor=12 then 0/0\nPASS edge-delete-degree: degree A=0 B=1\nPASS cleanup: closed + tmpdir removed\nSUMMARY pass=12 fail=0"
+  },
+  "sqlite_invocation": "node",
+  "commands": [
+    {
+      "cmd": "node --check lib/db.js",
+      "exit": 0,
+      "tail": ""
+    },
+    {
+      "cmd": "node lib/db.js --self-test",
+      "exit": 0,
+      "tail": "SUMMARY pass=12 fail=0"
+    },
+    {
+      "cmd": "node lib/db.js --help",
+      "exit": 0,
+      "tail": "Usage: node lib/db.js --self-test"
+    },
+    {
+      "cmd": "node lib/db.js --bogus",
+      "exit": 1,
+      "tail": "Unknown arguments: --bogus"
+    }
+  ],
+  "notes": "Driver: require('node:sqlite') succeeds on Node v22.23.3 (ExperimentalWarning only); --experimental-sqlite re-exec path implemented per contract but not exercised because the flag is unneeded. Degree/rev are never written in JS; self-test step 6 proves trigger ownership with a raw-SQL edge INSERT/DELETE probe. Extra checks passed outside the CLI: openDb(':memory:'), setScanStatus stats/finishedAt, search limit=0 (no LIMIT) vs limit=1, FTS re-index on putBody update (old term gone, new term found), 2 MiB text cap with fts_truncated=1, stats queue counts (pending/running), duplicate addEdge=false without throw, idempotent close. lib/migrate.js appeared complete at 02:46 and matched the dependency contract (PRAGMAS/MIGRATIONS/SCHEMA_VERSION/applyMigrations); not modified.",
+  "blockers": []
+}

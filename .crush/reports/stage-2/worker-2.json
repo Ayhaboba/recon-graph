@@ -1,0 +1,34 @@
+{
+  "worker_id": "worker-2",
+  "stage": 2,
+  "status": "success",
+  "files_written": [
+    "lib/extract.js",
+    "tests/extract.test.js",
+    "tests/fixtures/html/basic.html",
+    "tests/fixtures/html/nested.html",
+    "tests/fixtures/html/attrs.html",
+    "tests/fixtures/html/css.html",
+    "tests/fixtures/html/flag.html"
+  ],
+  "node_test": {
+    "tests": 10,
+    "pass": 10,
+    "fail": 0,
+    "raw_tail": "plates\nok 8 - extractJs ignores non-path literals and interpolated templates\n  ---\n  duration_ms: 0.449957\n  type: 'test'\n  ...\n# Subtest: extractSitemap and extractRobots\nok 9 - extractSitemap and extractRobots\n  ---\n  duration_ms: 1.086857\n  type: 'test'\n  ...\n# Subtest: malformed html does not throw\nok 10 - malformed html does not throw\n  ---\n  duration_ms: 18.693492\n  type: 'test'\n  ...\n1..10\n# tests 10\n# suites 0\n# pass 10\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 89.969739\n"
+  },
+  "commands": [
+    {
+      "cmd": "node --check lib/extract.js",
+      "exit": 0,
+      "tail": "(no output)"
+    },
+    {
+      "cmd": "node --test tests/extract.test.js",
+      "exit": 0,
+      "tail": "plates\nok 8 - extractJs ignores non-path literals and interpolated templates\n  ---\n  duration_ms: 0.449957\n  type: 'test'\n  ...\n# Subtest: extractSitemap and extractRobots\nok 9 - extractSitemap and extractRobots\n  ---\n  duration_ms: 1.086857\n  type: 'test'\n  ...\n# Subtest: malformed html does not throw\nok 10 - malformed html does not throw\n  ---\n  duration_ms: 18.693492\n  type: 'test'\n  ...\n1..10\n# tests 10\n# suites 0\n# pass 10\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 89.969739\n"
+    }
+  ],
+  "notes": "Regex-only extraction, zero deps, no JS execution. Covers base href (trailing-slash/index.html directory semantics preserved for child resolution), title entity decode, all required HTML tag/attr sources, CSS url()/@import, JS string+template-prefix literals, sitemap <loc>, robots Sitemap lines only, 5000-link cap, malformed-input never throws. Hardened CSS/sitemap scanners to linear time (2MB unclosed url( ~3ms, 500k <loc ~13ms). Brief expected http://site.test/b for nested.html href https://site.test/a/../b, but an absolute https URL must keep its scheme after dot-segment resolution; test asserts https://site.test/b. Strict per-brief JS path rule excludes bare relative/page.html (no leading /, ./, ../); test asserts exclusion. JS fixtures endpoints.js and bundle.js were present; no partial status needed.",
+  "blockers": []
+}

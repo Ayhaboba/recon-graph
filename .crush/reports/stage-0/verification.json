@@ -1,0 +1,112 @@
+{
+  "stage": 0,
+  "node_version": "v22.23.3",
+  "sha256_all_match": true,
+  "syntax_ok": true,
+  "smoke": {
+    "pass": 9,
+    "fail": 0,
+    "raw": "PASS vendored-files-exist\nPASS vendored-sha256-verbatim\nPASS demo-dataset-shape\nPASS server-start\nPASS index-html-script-order\nPASS http-index\nPASS http-vendor-assets\nPASS traversal-blocked\nPASS 404\nSUMMARY pass=9 fail=0 skip=0 total=9\nEXIT_CODE=0"
+  },
+  "http": {
+    "index_200": true,
+    "content_type": "text/html; charset=utf-8",
+    "js_content_type": "text/javascript; charset=utf-8",
+    "server_log": "[server] listening on http://127.0.0.1:8931/"
+  },
+  "browser": {
+    "binary": "/usr/bin/chromium",
+    "dom_status": "ready · nodes 9 · links 10 · worker wait",
+    "error_overlay_hidden": true,
+    "png_bytes": 15096,
+    "png_signature_ok": true
+  },
+  "drag": {
+    "status": "pass",
+    "detail": "CDP real pointer events at 1280x800 after 3000ms physics settle. mousePressed on largest node set R.dragNode='GET http://demo.local/'; mid-drag node.fx=104.6641 fy=-32.2410 (fx_seen=true). After 8x(12px,8px) moves + release + 900ms: dx=20.22 dy=29.65 vs control node dx=-1.47 dy=-15.33. Pass on first trial, no retry. Earlier attempt without settle wait pressed stale coordinates (node still flying), fx stayed null; that run's displacement was physics drift (control moved 21.65 > node 10.92) and was not counted."
+  },
+  "criterion": {
+    "server_serves_index": true,
+    "demo_graph_draws": true,
+    "drag_works": true,
+    "sha256_matches": true
+  },
+  "raw_commands": [
+    {
+      "cmd": "node -v",
+      "exit": 0,
+      "output": "v22.23.3"
+    },
+    {
+      "cmd": "sha256sum web/vendor/graph-view.js /home/erema/obsidian-graph/src/graph-view.js",
+      "exit": 0,
+      "output": "53f22b6a827f7bdd503efdefd1b06ea03a5d2298d733a4d94624aa113315b51f  web/vendor/graph-view.js\n53f22b6a827f7bdd503efdefd1b06ea03a5d2298d733a4d94624aa113315b51f  /home/erema/obsidian-graph/src/graph-view.js"
+    },
+    {
+      "cmd": "sha256sum web/vendor/shims.js /home/erema/obsidian-graph/src/shims.js",
+      "exit": 0,
+      "output": "8064f536183d6122c6febde2a63d1d7beebdeaf0cf8b4356b42c2ab58fa746dc  web/vendor/shims.js\n8064f536183d6122c6febde2a63d1d7beebdeaf0cf8b4356b42c2ab58fa746dc  /home/erema/obsidian-graph/src/shims.js"
+    },
+    {
+      "cmd": "sha256sum web/vendor/sim.js /home/erema/obsidian-graph/sim.js",
+      "exit": 0,
+      "output": "549be2f69710af360d521c92b80c83718f673594d3dc2255a65e251199eee25d  web/vendor/sim.js\n549be2f69710af360d521c92b80c83718f673594d3dc2255a65e251199eee25d  /home/erema/obsidian-graph/sim.js"
+    },
+    {
+      "cmd": "sha256sum web/vendor/pixi.min.js /home/erema/obsidian-graph/lib/pixi.min.js",
+      "exit": 0,
+      "output": "842814b22c348dcdab381ffb79da3763ff0672271f60f09dababa52656fd31b8  web/vendor/pixi.min.js\n842814b22c348dcdab381ffb79da3763ff0672271f60f09dababa52656fd31b8  /home/erema/obsidian-graph/lib/pixi.min.js"
+    },
+    {
+      "cmd": "sha256sum web/vendor/graph.css /home/erema/obsidian-graph/css/graph.css",
+      "exit": 0,
+      "output": "3ea9502e219d2a396cfba69a92073b80a9264f194517b7f6ed5be516a48f62d3  web/vendor/graph.css\n3ea9502e219d2a396cfba69a92073b80a9264f194517b7f6ed5be516a48f62d3  /home/erema/obsidian-graph/css/graph.css"
+    },
+    {
+      "cmd": "node --check bin/server.js && echo SYNTAX_SERVER_OK; node --check tests/stage0-smoke.js && echo SYNTAX_TEST_OK",
+      "exit": 0,
+      "output": "SYNTAX_SERVER_OK\nSYNTAX_TEST_OK"
+    },
+    {
+      "cmd": "node tests/stage0-smoke.js",
+      "exit": 0,
+      "output": "PASS vendored-files-exist\nPASS vendored-sha256-verbatim\nPASS demo-dataset-shape\nPASS server-start\nPASS index-html-script-order\nPASS http-index\nPASS http-vendor-assets\nPASS traversal-blocked\nPASS 404\nSUMMARY pass=9 fail=0 skip=0 total=9"
+    },
+    {
+      "cmd": "curl -s -D - -o /dev/null http://127.0.0.1:8931/",
+      "exit": 0,
+      "output": "HTTP/1.1 200 OK\nContent-Type: text/html; charset=utf-8\nContent-Length: 5446\nCache-Control: no-store\nX-Content-Type-Options: nosniff"
+    },
+    {
+      "cmd": "curl -s -D - -o /dev/null http://127.0.0.1:8931/vendor/pixi.min.js",
+      "exit": 0,
+      "output": "HTTP/1.1 200 OK\nContent-Type: text/javascript; charset=utf-8\nContent-Length: 487134\nCache-Control: no-store\nX-Content-Type-Options: nosniff"
+    },
+    {
+      "cmd": "curl -s -D - -o /dev/null http://127.0.0.1:8931/vendor/sim.js",
+      "exit": 0,
+      "output": "HTTP/1.1 200 OK\nContent-Type: text/javascript; charset=utf-8\nContent-Length: 17693\nCache-Control: no-store\nX-Content-Type-Options: nosniff"
+    },
+    {
+      "cmd": "timeout 30s chromium --headless=new --no-sandbox --disable-gpu --enable-unsafe-swiftshader --virtual-time-budget=5000 --dump-dom http://127.0.0.1:8931/",
+      "exit": 0,
+      "output": "CHROME_DOM_EXIT=0\nDOM_BYTES=5872\n<div id=\"status\">ready · nodes 9 · links 10 · worker wait</div>\n<div id=\"error\" style=\"display:none\"></div>"
+    },
+    {
+      "cmd": "timeout 30s chromium --headless=new --no-sandbox --disable-gpu --enable-unsafe-swiftshader --window-size=1280,800 --virtual-time-budget=6000 --screenshot=.crush/reports/stage-0/graph.png http://127.0.0.1:8931/",
+      "exit": 0,
+      "output": "CHROME_SHOT_EXIT=0\npng_bytes 15096 signature_ok true"
+    },
+    {
+      "cmd": "node -e \"console.log('WebSocket_global', typeof WebSocket)\"",
+      "exit": 0,
+      "output": "WebSocket_global function"
+    },
+    {
+      "cmd": "node /tmp-drag-cdp (inline CDP script; Page.navigate + Runtime.evaluate + Input.dispatchMouseEvent)",
+      "exit": 0,
+      "output": "BOOT {\"nodes\":9,\"links\":10}\nNODE GET http://demo.local/ world=(56.66,-61.91) r=8.00 screen=(696.7,420.6) pan=(640,482.5) scale=1 dpr=1\nMID {\"fx\":104.66412353515625,\"fy\":-32.24099873021703,\"dragNode\":\"GET http://demo.local/\"}\nAFTER node=(76.88,-32.25) dx=20.22 dy=29.65 fx=null fy=null fx_seen=true pressed=GET http://demo.local/\nCONTROL GET http://demo.local/about dx=-1.47 dy=-15.33\nDRAG_PASS node=GET http://demo.local/ dx=20.22 dy=29.65 fx_seen=true pressed=GET http://demo.local/ ctrl_dx=-1.47"
+    }
+  ],
+  "failures": []
+}

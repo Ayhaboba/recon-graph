@@ -1,0 +1,43 @@
+{
+  "worker_id": "worker-1",
+  "stage": 7,
+  "timestamp": "2026-11-02T13:55:00Z",
+  "status": "success",
+  "focus_area": "client_inspector_panel_actions_subgraph",
+  "files": [
+    "web/inspector.js",
+    "web/recon.js",
+    "tests/inspector.test.js",
+    "lib/stream.js"
+  ],
+  "commands": [
+    "node --check web/inspector.js",
+    "node --check web/recon.js",
+    "node --check tests/inspector.test.js",
+    "node --test tests/inspector.test.js",
+    "npm test",
+    "node .probe-tmp/stage7-manual.js"
+  ],
+  "numbers": {
+    "inspector_tests": 6,
+    "inspector_pass": 6,
+    "npm_tests": 104,
+    "npm_pass": 104,
+    "npm_fail": 0,
+    "flag_preview_len": 218,
+    "subgraph_global": 21,
+    "subgraph_local": 7,
+    "refetch_rev_before": 94,
+    "refetch_rev_after": 111
+  },
+  "self_validation": {
+    "node_payload": true,
+    "headers": true,
+    "findings": true,
+    "curl": true,
+    "refetch_delta": true,
+    "back_to_global": true
+  },
+  "known_issues": [],
+  "recommendations": []
+}

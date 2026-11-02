@@ -1,0 +1,36 @@
+{
+  "stage": 8,
+  "verdict": "PASS",
+  "score": 86,
+  "post_repair": {
+    "verdict": "PASS",
+    "score": 86,
+    "evidence": "engine append-only (0 removed lines), ReDoS moved to worker_threads (abort 2006 ms, poller gap 21 ms), FTS count is true total, virtualization 24 rows"
+  },
+  "pre_repair_checks": [
+    {"id": 1, "status": "PASS", "detail": "lib/search.js:45 calls db.search(scanId,q,{limit:0}); lib/db.js:627-645 adds LIMIT only when limit>0, so count=deduped true total; stream.js:542 splits ids into SEARCH_CHUNK_SIZE slices summing to count (truncated flag when count>maxIds)."},
+    {"id": 2, "status": "FAIL", "detail": "lib/search.js:82-89 catches bad regex and returns {error:'bad-regex'}; stream.js:504-516 emits an error frame and keeps the socket, pattern capped at 500 chars. But regexSearch scans synchronously inside one setImmediate (stream.js:483) with node/byte caps checked only between rows; probe '(a+)+$' on a 28-byte body exceeded 12s, and a 200MB scan can stall the 250ms poller for seconds."},
+    {"id": 3, "status": "FAIL", "detail": "setEmphasis/clearEmphasis are appended at graph-view.js:849-878 and VENDOR.md records original 53f22b6a.../49819 and patched 6d2662d3.../51067, but existing engine bytes were modified at line 159 (cmp differs at byte 8332); prefix is not identical, so the change is not append-only."},
+    {"id": 4, "status": "PASS", "detail": "Emphasis reuses colors.fillHighlight and existing circle/text alpha in Node.render (graph-view.js:159); no new shaders or passes. Non-matching nodes get alpha 0.25; eventMode/hit-testing untouched, so drag/hover still function."},
+    {"id": 5, "status": "PASS", "detail": "web/search.js:324-358 renders at most MAX_RENDERED=40 absolutely-positioned rows, spacer height=total*ROW_HEIGHT, updates coalesced with requestAnimationFrame, and onWireMessage discards mismatched seq; 100k items still produce <=40 row DOM nodes."},
+    {"id": 6, "status": "PASS", "detail": "tests/search.test.js:651 asserts buffer length equals server count, :658 asserts rendered rows < count; 6/6 search tests and 110/110 npm tests pass per verification.json."}
+  ],
+  "pre_repair_issues": {
+    "critical": [],
+    "high": [
+      "Engine bytes touched outside the append: web/vendor/graph-view.js line 159 (byte 8332) inserts the _emphasisIds branch into Node.prototype.render; prefix differs from original source (cmp fails at line 159), violating the append-only rule and check 3.",
+      "Regex search can block the 250ms poller: regexSearch performs the entire DB scan synchronously in one setImmediate; MAX_REGEX_NODES/MAX_REGEX_BYTES are only tested between rows, so a single catastrophic pattern hangs the event loop (probe (a+)+$ on 28 bytes >12s). No yield during scanning and no ReDoS guard."
+    ],
+    "medium": [
+      "verification.json reports engine_edit.prefix_identical=true while the measured prefix differs at line 159; the stated evidence is false.",
+      "VENDOR.md policy says the only permitted edit is an append, but its Applied edits section records a line-159 render-loop hook; the appended range is stated as 848-878 while the actual Stage 8 IIFE starts at line 851.",
+      "FTS path materializes every hit from db.search(limit:0) before applying maxIds, so very large result sets spike memory and latency despite the maxIds cap."
+    ],
+    "low": [
+      "Non-matching hovered nodes are dimmed too (Node.render sets hover alpha then multiplies by 0.25); hover still works but feedback is muted.",
+      "Search tests exercise only 60 matches; no test covers the 100k-node DOM bound, spacer height, bad-regex error frame, or regex caps.",
+      "MAX_PATTERN_LENGTH limits pattern length only, not backtracking complexity."
+    ]
+  },
+  "criterion_met": true
+}

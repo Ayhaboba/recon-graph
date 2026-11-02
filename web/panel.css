@@ -1,0 +1,243 @@
+/*
+ * panel.css — stage 9 fork of the clean-room Obsidian settings panel.
+ *
+ * Source look: /home/erema/obsidian-graph/src/clean/panel.css and the
+ * .graph-controls rules in app.css:16803-16980. Layout tokens, sliders,
+ * toggles and colour rows are preserved; every selector is namespaced under
+ * #panel so the fork cannot leak into the graph or the inspector.
+ */
+
+#panel .graph-settings-panel {
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  color: var(--text-normal, var(--color-base-100, #dadada));
+  background: var(--background-secondary, #282828);
+  font-family: var(--font-interface, system-ui, sans-serif);
+  font-size: var(--font-ui-small, 12px);
+  line-height: 1.4;
+}
+
+#panel .gs-panel-title {
+  padding: 8px 2px 10px;
+  color: var(--text-muted, var(--color-base-70, #b3b3b3));
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ------------------------------------------------------------------------ */
+/* sections                                                                  */
+/* ------------------------------------------------------------------------ */
+
+#panel .gs-section {
+  border-top: 1px solid
+    var(--background-modifier-border, var(--color-base-30, #333333));
+}
+
+#panel .gs-section:last-child {
+  border-bottom: 1px solid
+    var(--background-modifier-border, var(--color-base-30, #333333));
+}
+
+#panel .gs-section-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 8px 2px;
+  color: var(--text-normal, var(--color-base-100, #dadada));
+  font-size: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+}
+
+#panel .gs-section-header::-webkit-details-marker {
+  display: none;
+}
+
+#panel .gs-section-header::before {
+  content: "\25B8";
+  color: var(--text-muted, var(--color-base-70, #b3b3b3));
+  font-size: 10px;
+  line-height: 1;
+  transform: translateY(0.5px);
+}
+
+#panel .gs-section[open] > .gs-section-header::before {
+  content: "\25BE";
+}
+
+#panel .gs-section-body {
+  padding: 0 2px 8px;
+}
+
+/* ------------------------------------------------------------------------ */
+/* rows                                                                      */
+/* ------------------------------------------------------------------------ */
+
+#panel .gs-setting {
+  padding: 5px 0;
+}
+
+#panel .gs-setting-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 18px;
+}
+
+#panel .gs-setting-name {
+  color: var(--text-normal, var(--color-base-100, #dadada));
+  font-size: inherit;
+  cursor: pointer;
+}
+
+#panel .gs-setting-value,
+#panel .gs-setting-count {
+  color: var(--text-muted, var(--color-base-70, #b3b3b3));
+  font-size: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
+#panel .gs-setting-count {
+  margin-left: auto;
+  padding-left: 6px;
+  color: var(--text-faint, var(--color-base-50, #666666));
+}
+
+#panel .gs-setting-control {
+  display: flex;
+  align-items: center;
+}
+
+#panel .gs-setting-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+#panel .gs-setting-toggle .gs-setting-info {
+  flex: 1 1 auto;
+}
+
+#panel .gs-setting-toggle .gs-setting-control {
+  flex: 0 0 auto;
+  margin-inline-start: 8px;
+}
+
+#panel .gs-setting-slider .gs-setting-control {
+  padding-top: 6px;
+}
+
+#panel .gs-setting-slider .gs-setting-control,
+#panel .gs-setting-slider .gs-range {
+  width: 100%;
+}
+
+/* ------------------------------------------------------------------------ */
+/* controls                                                                  */
+/* ------------------------------------------------------------------------ */
+
+#panel .gs-checkbox {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--interactive-accent, var(--color-accent, #a882ff));
+  cursor: pointer;
+}
+
+#panel .gs-range {
+  height: 16px;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  accent-color: var(--interactive-accent, var(--color-accent, #a882ff));
+  cursor: pointer;
+}
+
+#panel .gs-button {
+  box-sizing: border-box;
+  width: 100%;
+  height: 26px;
+  margin: 2px 0 0;
+  padding: 0 8px;
+  color: var(--text-normal, var(--color-base-100, #dadada));
+  background: var(--background-primary, var(--color-base-00, #1c1c1c));
+  border: 1px solid
+    var(--background-modifier-border, var(--color-base-30, #333333));
+  border-radius: 4px;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+#panel .gs-button:hover {
+  border-color: var(--interactive-accent, var(--color-accent, #a882ff));
+}
+
+#panel .gs-button:active {
+  background: var(--background-modifier-hover, rgba(255, 255, 255, 0.06));
+}
+
+#panel .gs-subsection-title {
+  margin: 10px 0 2px;
+  padding-top: 6px;
+  color: var(--text-muted, var(--color-base-70, #b3b3b3));
+  border-top: 1px dashed
+    var(--background-modifier-border, var(--color-base-30, #333333));
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+#panel .gs-subsection-title:first-child {
+  margin-top: 2px;
+  border-top: 0;
+}
+
+/* ------------------------------------------------------------------------ */
+/* colour groups                                                             */
+/* ------------------------------------------------------------------------ */
+
+#panel .gs-color-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+}
+
+#panel .gs-color-swatch {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: 1px solid
+    var(--background-modifier-border, var(--color-base-30, #333333));
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#panel .gs-color-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--text-normal, var(--color-base-100, #dadada));
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* The inspector owns #panel; when both views are present, keep the settings
+ * panel flush with the aside padding rather than adding a second inset. */
+#panel .settings-placeholder > .graph-settings-panel {
+  margin-top: 2px;
+}
